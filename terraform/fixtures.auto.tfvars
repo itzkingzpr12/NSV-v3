@@ -97,7 +97,7 @@ deployment_maximum_percent = 100
 
 deployment_controller_type = "ECS"
 
-desired_count = 1
+desired_count = 0
 
 task_memory = 512
 
