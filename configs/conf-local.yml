@@ -77,7 +77,7 @@ BOT:
   warn_thumbnail: https://cdn.discordapp.com/emojis/835417781960835074.png?v=1
   error_thumbnail: https://cdn.discordapp.com/emojis/835417781913649152.png?v=1
   documentation_url: "https://gitlab.com/BIC_Dev/nitrado-server-manager-v3/-/wikis/Home"
-  guild_service: "nitrado-server-manager-v2"
+  guild_service: "nitrado-server-manager-v3"
 RUNNERS:
   players:
     frequency: 60

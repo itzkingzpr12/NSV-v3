@@ -78,7 +78,7 @@ func LoggingMiddleware() func(http.Handler) http.Handler {
 
 			next.ServeHTTP(wrapped, r)
 
-			if r.URL.Path == "/nitrado-server-manager-v2/status" {
+			if r.URL.Path == "/nitrado-server-manager-v3/status" {
 				return
 			}
 
