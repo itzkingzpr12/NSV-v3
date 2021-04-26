@@ -62,7 +62,7 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 			logger.Error("runner_log")
 			continue
 		} else {
-			newCtx := logging.AddValues(gCtx, zap.String("message", "Started online players runner"))
+			newCtx := logging.AddValues(gCtx, zap.String("runner_message", "Started online players runner"))
 			logger := logging.Logger(newCtx)
 			logger.Info("runner_log")
 		}
@@ -120,7 +120,7 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 					zap.String("error_message", vErr.Message),
 				)
 				logger := logging.Logger(newCtx)
-				logger.Error("runner_log")
+				logger.Info("runner_log")
 				continue
 			}
 

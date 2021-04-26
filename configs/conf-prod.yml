@@ -81,13 +81,13 @@ BOT:
 RUNNERS:
   players:
     frequency: 300
-    workers: 5
+    workers: 20
     delay: 0
     enabled: true
   logs:
     frequency: 3600
-    workers: 5
-    delay: 15
+    workers: 10
+    delay: 60
     enabled: true
 COMMANDS:
   -
