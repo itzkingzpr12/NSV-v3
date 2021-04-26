@@ -1,0 +1,535 @@
+REDIS:
+  host: "host.docker.internal"
+  port: 6383
+  pool: 10
+NITRADO_SERVICE:
+  url: "http://host.docker.internal:8080/nitrado-service-v2"
+GUILD_CONFIG_SERVICE:
+  host: "host.docker.internal:8082"
+  base_path: "/guild-config-service"
+CACHE_SETTINGS:
+  activation_token:
+    base: "ACTIVATION_TOKEN"
+    ttl: "604800" # 7 days
+    enabled: true
+  command_message_reaction:
+    base: "COMMAND_MESSAGE_REACTION"
+    ttl: "3600" # 1 hour
+    enabled: true
+  nitrado_token_guild:
+    base: "NITRADO_TOKEN_GUILD"
+    ttl: "86400" # 24 hours
+    enabled: true
+  ban_reaction:
+    base: "BAN_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  unban_reaction:
+    base: "UNBAN_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  stop_reaction:
+    base: "STOP_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  restart_reaction:
+    base: "RESTART_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  whitelist_reaction:
+    base: "WHITELIST_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  unwhitelist_reaction:
+    base: "UNWHITELIST_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  clear_whitelist_reaction:
+    base: "CLEAR_WHITELIST_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  create_channels_reaction:
+    base: "CREATE_CHANNELS_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  set_output_reaction:
+    base: "SET_OUTPUT_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  add_role_reaction:
+    base: "ADD_ROLE_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  remove_role_reaction:
+    base: "REMOVE_ROLE_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
+  online_players_output_channel_messages:
+    base: "ONLINE_PLAYERS_OUTPUT_CHANNEL_MESSAGES"
+    ttl: "86400" # 24 hours
+BOT:
+  prefix: "n!"
+  ok_color: 0x3AB795
+  warn_color: 0xFFD166
+  error_color: 0xEE6352
+  working_thumbnail: https://cdn.discordapp.com/emojis/833494790326714379.png?v=1
+  ok_thumbnail: https://cdn.discordapp.com/emojis/835676837320720406.png?v=1
+  warn_thumbnail: https://cdn.discordapp.com/emojis/835417781960835074.png?v=1
+  error_thumbnail: https://cdn.discordapp.com/emojis/835417781913649152.png?v=1
+  documentation_url: "https://gitlab.com/BIC_Dev/nitrado-server-manager-v3/-/wikis/Home"
+  guild_service: "nitrado-server-manager-v2"
+RUNNERS:
+  players:
+    frequency: 60
+    workers: 5
+    delay: 0
+    enabled: true
+  logs:
+    frequency: 240
+    workers: 5
+    delay: 15
+    enabled: true
+COMMANDS:
+  -
+    name: "List Servers"
+    long: "servers"
+    short: "ls"
+    description: "Outputs a listing of all your servers. This will include any channels they use for outputting status information."
+    min_args: 0
+    max_args: 0
+    usage:
+      - "servers"
+      - "ls"
+    examples: 
+      - "servers"
+    enabled: true
+    category: "Server Management"
+    category_short: "servers"
+  -
+    name: "Name Server"
+    long: "nameserver"
+    short: "ns"
+    description: "Names a server within the bot. The server will use this name moving forwards for any status outputs."
+    min_args: 2
+    max_args: 20
+    usage:
+      - "nameserver {server_id} {new_name}"
+      - "ns {server_id} {new_name}"
+    examples: 
+      - "nameserver 1234567 My Awesome Ark Server"
+    enabled: true
+    category: "Server Management"
+    category_short: "servers"
+  -
+    name: "Nitrado Token"
+    long: "nitradotoken"
+    short: "nt"
+    description: "Initiates a DM with the bot where you can provide Nitrado Tokens. The Nitrado Tokens will give the bot access to see information about your servers. Only one Nitrado Token should be provided per Nitrado account."
+    min_args: 0
+    max_args: 0
+    usage:
+      - "nitradotoken"
+      - "nt"
+    examples: 
+      - "nitradotoken"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Add Nitrado Token"
+    long: "addtoken"
+    short: "at"
+    description: "Adds a Nitrado Token to the bot for your Discord server. These tokens are safely stored in an encrypted keystore."
+    min_args: 1
+    max_args: 1
+    usage:
+      - "addtoken {nitrado_token}"
+      - "at {nitrado_token}"
+    examples: 
+      - "addtoken asdfasdf-asdf-asdfasdf-asdfasdf-asdf-aasfd"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Remove Server"
+    long: "removeserver"
+    short: "rs"
+    description: "Removes a server from the bot. This is useful for when you delete a server or one gets suspended in Nitrado."
+    min_args: 1
+    max_args: 1
+    usage:
+      - "removeserver {server_id}"
+      - "rs {server_id}"
+    examples: 
+      - "removeserver 1234567"
+    enabled: true
+    category: "Server Management"
+    category_short: "servers"
+  -
+    name: "Auto Setup"
+    long: "setup"
+    short: "setup"
+    description: "Automatically links all of your Nitrado servers to the bot. You will need to activate one time before running this, as well as provide Nitrado Tokens. Run this command again every time you add new servers to your cluster."
+    min_args: 0
+    max_args: 0
+    usage:
+      - "setup"
+    examples: 
+      - "setup"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Bot Activation"
+    long: "activate"
+    short: "activate"
+    description: "Activates the bot for your Discord. BIC Development will provide you a one time use unique activation token. You can activate the bot on any single Discord server."
+    min_args: 1
+    max_args: 1
+    usage:
+      - "activate {activation_token}"
+    examples: 
+      - "activate aSdF123AsDf123"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Help"
+    long: "help"
+    short: "h"
+    description: "Shows a listing of all available commands with descriptions and information on usage and examples."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "help"
+    examples: 
+      - "help"
+    enabled: true
+    category: "Help"
+    category_short: "help"
+  -
+    name: "Ban Player"
+    long: "ban"
+    short: "b"
+    description: "Bans a player on one or all servers. It may take up to 5 minutes for Nitrado to register the ban with Ark."
+    min_args: 1
+    max_args: 20
+    usage:
+      - "ban {GT/PSN}"
+      - "ban {server_id} {GT/PSN}"
+      - "b {GT/PSN}"
+    examples: 
+      - "ban SomePlayerAccountName"
+      - "ban 1234567 SomePlayerAccountName"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Unban Player"
+    long: "unban"
+    short: "ub"
+    description: "Unbans a player on one or all servers. It may take up to 5 minutes for Nitrado to register the unban with Ark."
+    min_args: 1
+    max_args: 20
+    usage:
+      - "unban {GT/PSN}"
+      - "unban {server_id} {GT/PSN}"
+      - "ub {GT/PSN}"
+    examples: 
+      - "unban SomePlayerAccountName"
+      - "unban 1234567 SomePlayerAccountName"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Get Banlist"
+    long: "banlist"
+    short: "bl"
+    description: "Display the banlist for one or all servers."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "banlist"
+      - "banlist {server_id}"
+      - "bl"
+    examples: 
+      - "banlist"
+      - "banlist 1234567"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Stop Server"
+    long: "stop"
+    short: "s"
+    description: "Immediately stops one or all servers. This will not wait for the \"restart timer\"."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "stop"
+      - "stop {server_id}"
+      - "s"
+    examples: 
+      - "stop"
+      - "stop 1234567"
+    enabled: true
+    workers: 10
+    category: "Server Management"
+    category_short: "servers"
+  -
+    name: "Restart Server"
+    long: "restart"
+    short: "r"
+    description: "Initiates a restart for one or all servers if they are running, otherwise starts one or all servers if they are stopped. The restart may wait for your \"restart timer\" and outputs the message submitted with the command."
+    min_args: 0
+    max_args: 30
+    usage:
+      - "restart"
+      - "restart {message}"
+      - "restart {server_id}"
+      - "restart {server_id} {message}"
+      - "r"
+    examples: 
+      - "restart"
+      - "restart We are restarting all servers in the cluster."
+      - "restart 1234567 We are restarting this server."
+    enabled: true
+    workers: 10
+    category: "Server Management"
+    category_short: "servers"
+  -
+    name: "Whitelist Player"
+    long: "whitelistplayer"
+    short: "wp"
+    description: "Whitelist a player on one or all servers to bypass server capacity restrictions. It may take up to 5 minutes for Nitrado to register the whitelist with Ark. This is only supported by Playstation servers."
+    min_args: 1
+    max_args: 20
+    usage:
+      - "whitelistplayer {GT/PSN}"
+      - "whitelistplayer {server_id} {GT/PSN}"
+      - "wp {GT/PSN}"
+    examples: 
+      - "whitelistplayer SomePlayerAccountName"
+      - "whitelistplayer 1234567 SomePlayerAccountName"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Unwhitelist Player"
+    long: "unwhitelistplayer"
+    short: "uwp"
+    description: "Remove a player's whitelist on one or all servers. It may take up to 5 minutes for Nitrado to register the whitelist removal with Ark."
+    min_args: 1
+    max_args: 20
+    usage:
+      - "unwhitelistplayer {GT/PSN}"
+      - "unwhitelistplayer {server_id} {GT/PSN}"
+      - "uwp {GT/PSN}"
+    examples: 
+      - "unwhitelistplayer SomePlayerAccountName"
+      - "unwhitelistplayer 1234567 SomePlayerAccountName"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Clear Whitelist"
+    long: "clearwhitelist"
+    short: "cw"
+    description: "Clear all players whitelisted on one or all servers. It may take up to 30 minutes for Nitrado to register the whitelist removal with Ark. If the whitelist is not cleared after 30 minutes, please run the command again."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "clearwhitelist"
+      - "clearwhitelist {server_id}"
+      - "cw"
+    examples: 
+      - "clearwhitelist"
+      - "clearwhitelist 1234567"
+    enabled: false
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Get Whitelist"
+    long: "whitelist"
+    short: "wl"
+    description: "Display the whitelist for one or all servers."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "whitelist"
+      - "whitelist {server_id}"
+      - "wl"
+    examples: 
+      - "whitelist"
+      - "whitelist 1234567"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+  -
+    name: "Create Channels"
+    long: "createchannels"
+    short: "cc"
+    description: "Create a server's channels for Admin Logs, Chat Logs, and Online Players. This will only create channels that are not already set for the server. To move a servers output to a new channel, please use the Set Channel command instead."
+    min_args: 1
+    max_args: 5
+    usage:
+      - "createchannels {server_id}"
+      - "createchannels {server_id} {channel_suffix}"
+      - "cc {server_id}"
+    examples: 
+      - "createchannels 1234567"
+      - "createchannels 1234567 rag-1"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Set Output"
+    long: "setoutput"
+    short: "so"
+    description: "Changes where a server outputs its logs information to. This can be used to change the output channel for Admin Logs, Chat Logs, and Online Players."
+    min_args: 2
+    max_args: 2
+    usage:
+      - "setoutput {server_id} #channel"
+      - "so {server_id} #channel"
+    examples: 
+      - "setoutput 1234567 #channel"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Add Role"
+    long: "addrole"
+    short: "ar"
+    description: "Provide role-based access to the bot's commands. Anyone with this role will now have access to use the specified commands. You may provide one or more commands in the Add Role command."
+    min_args: 2
+    max_args: 30
+    usage:
+      - "addrole @role {command}"
+      - "addrole @role {command} {command} {command}..."
+      - "ar @role {command}"
+    examples: 
+      - "addrole @role ban"
+      - "addrole @role ban unban banlist"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Remove Role"
+    long: "removerole"
+    short: "rr"
+    description: "Remove role-based access to the bot's commands. Anyone with this role will no longer have access to use the specified commands. You may provide one or more commands in the Remove Role command."
+    min_args: 2
+    max_args: 30
+    usage:
+      - "removerole @role {command}"
+      - "removerole @role {command} {command} {command}..."
+      - "rr @role {command}"
+    examples: 
+      - "removerole @role ban"
+      - "removerole @role ban unban banlist"
+    enabled: true
+    category: "Bot Setup"
+    category_short: "setup"
+  -
+    name: "Search Players"
+    long: "searchplayers"
+    short: "search"
+    description: "Search for a player by their account name. Can use a partial account name with 3 or more characters."
+    min_args: 0
+    max_args: 1
+    usage:
+      - "searchplayers {GT/PSN}"
+      - "search {GT/PSN}"
+    examples: 
+      - "searchplayers dark"
+    enabled: true
+    workers: 10
+    category: "Player Management"
+    category_short: "players"
+REACTIONS:
+  "ban":
+    icon: ""
+    name: "ban"
+    id: "835683745793179679"
+    animated: true
+    full_emoji: "a:ban:835683745793179679"
+  "unban":
+    icon: ""
+    name: "unban"
+    id: "835683399384563752"
+    animated: false
+    full_emoji: ":unban:835683399384563752"
+  "stop":
+    icon: ""
+    name: "stop"
+    id: "835684368017653810"
+    animated: false
+    full_emoji: ":stop:835684368017653810"
+  "restart":
+    icon: ""
+    name: "restart"
+    id: "835685528917114891"
+    animated: false
+    full_emoji: ":restart:835685528917114891"
+  "whitelist":
+    icon: ""
+    name: "whitelist"
+    id: "835687322259030031"
+    animated: false
+    full_emoji: ":whitelist:835687322259030031"
+  "unwhitelist":
+    icon: ""
+    name: "unwhitelist"
+    id: "835687598991212554"
+    animated: false
+    full_emoji: ":unwhitelist:835687598991212554"
+  "clear_whitelist":
+    icon: ""
+    name: "yay"
+    id: "830297452669435914"
+    animated: true
+    full_emoji: "a:yay:830297452669435914"
+  "create_channels":
+    icon: ""
+    name: "createchannels"
+    id: "835688938584801350"
+    animated: false
+    full_emoji: ":createchannels:835688938584801350"
+  "set_output_admin":
+    icon: ""
+    name: "admin"
+    id: "835691447293968426"
+    animated: false
+    full_emoji: ":admin:835691447293968426"
+  "set_output_chat":
+    icon: ""
+    name: "chat"
+    id: "835691086054686720"
+    animated: false
+    full_emoji: ":chat:835691086054686720"
+  "set_output_players":
+    icon: ""
+    name: "player"
+    id: "835690240009568277"
+    animated: false
+    full_emoji: ":player:835690240009568277"
+  "add_role":
+    icon: ""
+    name: "addrole"
+    id: "835687937646657566"
+    animated: false
+    full_emoji: ":addrole:835687937646657566"
+  "remove_role":
+    icon: ""
+    name: "removerole"
+    id: "835688347530821634"
+    animated: false
+    full_emoji: ":removerole:835688347530821634"
