@@ -99,13 +99,15 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 		}
 
 		for _, aGuild := range allGuilds.Payload.Guilds {
+			agCtx := logging.AddValues(gCtx, zap.String("guild_id", aGuild.ID))
+
 			if !aGuild.Enabled {
 				continue
 			}
 
-			guildFeed, gfErr := guildconfigservice.GetGuildFeed(gCtx, r.GuildConfigService, aGuild.ID)
+			guildFeed, gfErr := guildconfigservice.GetGuildFeed(agCtx, r.GuildConfigService, aGuild.ID)
 			if gfErr != nil {
-				newCtx := logging.AddValues(gCtx,
+				newCtx := logging.AddValues(agCtx,
 					zap.NamedError("error", gfErr),
 					zap.String("error_message", gfErr.Message),
 				)
@@ -115,7 +117,7 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 			}
 
 			if vErr := guildconfigservice.ValidateGuildFeed(guildFeed, r.Config.Bot.GuildService, "Servers"); vErr != nil {
-				newCtx := logging.AddValues(gCtx,
+				newCtx := logging.AddValues(agCtx,
 					zap.NamedError("error", vErr),
 					zap.String("error_message", vErr.Message),
 				)
@@ -125,6 +127,11 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 			}
 
 			for _, server := range guildFeed.Payload.Guild.Servers {
+				serverCtx := logging.AddValues(agCtx,
+					zap.Uint64("server_id", server.ID),
+					zap.Int64("server_nitrado_id", server.NitradoID),
+				)
+
 				if !server.Enabled {
 					continue
 				}
@@ -152,7 +159,7 @@ func (r *Runners) OnlinePlayers(ctx context.Context, delay time.Duration) {
 				var aServer gcscmodels.Server = *server
 
 				wp.Submit(func() {
-					r.GetOnlinePlayersRequest(ctx, aServer, onlinePlayersOutputChannel)
+					r.GetOnlinePlayersRequest(serverCtx, aServer, onlinePlayersOutputChannel)
 				})
 			}
 		}

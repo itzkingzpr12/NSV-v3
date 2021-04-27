@@ -65,7 +65,7 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 		gCtx := logging.AddValues(ctx, zap.String("request_id", requestID.String()))
 
 		if wp.WaitingQueueSize() > 0 {
-			newCtx := logging.AddValues(ctx,
+			newCtx := logging.AddValues(gCtx,
 				zap.Int("queue_size", wp.WaitingQueueSize()),
 				zap.NamedError("error", errors.New("queue not empty")),
 				zap.String("error_message", "cannot start new logs run with non-empty queue"),
@@ -111,13 +111,15 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 		}
 
 		for _, aGuild := range allGuilds.Payload.Guilds {
+			agCtx := logging.AddValues(gCtx, zap.String("guild_id", aGuild.ID))
+
 			if !aGuild.Enabled {
 				continue
 			}
 
-			guildFeed, gfErr := guildconfigservice.GetGuildFeed(gCtx, r.GuildConfigService, aGuild.ID)
+			guildFeed, gfErr := guildconfigservice.GetGuildFeed(agCtx, r.GuildConfigService, aGuild.ID)
 			if gfErr != nil {
-				newCtx := logging.AddValues(gCtx,
+				newCtx := logging.AddValues(agCtx,
 					zap.NamedError("error", gfErr),
 					zap.String("error_message", gfErr.Message),
 				)
@@ -127,7 +129,7 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 			}
 
 			if vErr := guildconfigservice.ValidateGuildFeed(guildFeed, r.Config.Bot.GuildService, "Servers"); vErr != nil {
-				newCtx := logging.AddValues(gCtx,
+				newCtx := logging.AddValues(agCtx,
 					zap.NamedError("error", vErr),
 					zap.String("error_message", vErr.Message),
 				)
@@ -137,6 +139,11 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 			}
 
 			for _, server := range guildFeed.Payload.Guild.Servers {
+				serverCtx := logging.AddValues(agCtx,
+					zap.Uint64("server_id", server.ID),
+					zap.Int64("server_nitrado_id", server.NitradoID),
+				)
+
 				if !server.Enabled {
 					continue
 				}
@@ -170,7 +177,7 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 				var aServer gcscmodels.Server = *server
 
 				wp.Submit(func() {
-					r.GetLogsRequest(ctx, aServer, adminLogOutputChannel, chatLogOutputChannel)
+					r.GetLogsRequest(serverCtx, aServer, adminLogOutputChannel, chatLogOutputChannel)
 				})
 			}
 		}
