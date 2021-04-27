@@ -443,8 +443,8 @@ COMMANDS:
     long: "searchplayers"
     short: "search"
     description: "Search for a player by their account name. Can use a partial account name with 3 or more characters."
-    min_args: 0
-    max_args: 1
+    min_args: 1
+    max_args: 10
     usage:
       - "searchplayers {GT/PSN}"
       - "search {GT/PSN}"
