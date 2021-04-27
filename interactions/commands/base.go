@@ -71,6 +71,7 @@ func getCommand(commands []configs.Command, prefix string, content string) (conf
 func (c *Commands) Factory(ctx context.Context, s *discordgo.Session, mc *discordgo.MessageCreate) {
 	ctx = logging.AddValues(ctx,
 		zap.String("scope", logging.GetFuncName()),
+		zap.String("message_content", mc.Content),
 	)
 
 	command, gcErr := getCommand(c.Config.Commands, c.Config.Bot.Prefix, mc.Content)
@@ -93,7 +94,9 @@ func (c *Commands) Factory(ctx context.Context, s *discordgo.Session, mc *discor
 		return
 	}
 
-	ctx = logging.AddValues(ctx, zap.String("command", command.Name))
+	ctx = logging.AddValues(ctx,
+		zap.String("command", command.Name),
+	)
 
 	logger := logging.Logger(ctx)
 	logger.Info("command_log")

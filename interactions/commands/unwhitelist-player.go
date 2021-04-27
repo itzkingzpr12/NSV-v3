@@ -84,6 +84,10 @@ func (c *Commands) UnwhitelistPlayer(ctx context.Context, s *discordgo.Session, 
 			continue
 		}
 
+		if aServer.ServerTypeID != "arkps" {
+			continue
+		}
+
 		if parsedCommand.Params.ServerID != 0 {
 			if parsedCommand.Params.ServerID == aServer.NitradoID {
 				servers = append(servers, *aServer)
@@ -97,8 +101,8 @@ func (c *Commands) UnwhitelistPlayer(ctx context.Context, s *discordgo.Session, 
 
 	if len(servers) == 0 {
 		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
-			Message: "Unable to find servers to unwhitelist on",
-			Err:     errors.New("invalid server id or no servers set up"),
+			Message: "Unable to find PS servers to unwhitelist on",
+			Err:     errors.New("invalid server id or no PS servers set up"),
 		})
 		return
 	}
