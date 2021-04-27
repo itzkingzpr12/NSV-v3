@@ -273,7 +273,7 @@ func (bpe *UnbanPlayerError) ConvertToEmbedField() (*discordgo.MessageEmbedField
 	}
 
 	for _, server := range bpe.Servers {
-		fieldVal += server.Name + "\n"
+		fieldVal += fmt.Sprintf("[%d] - %s\n", server.NitradoID, server.Name)
 	}
 
 	if fieldVal == "" {
