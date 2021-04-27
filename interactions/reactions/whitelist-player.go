@@ -276,7 +276,7 @@ func (bpe *WhitelistPlayerError) ConvertToEmbedField() (*discordgo.MessageEmbedF
 	}
 
 	for _, server := range bpe.Servers {
-		fieldVal += fmt.Sprintf("(%d) - %s\n", server.NitradoID, server.Name)
+		fieldVal += fmt.Sprintf("**%d** - %s\n", server.NitradoID, server.Name)
 	}
 
 	if fieldVal == "" {
