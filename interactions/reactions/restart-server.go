@@ -161,7 +161,7 @@ func (r *Reactions) HandleRestartServerResponses(ctx context.Context, s *discord
 	var successes []RestartSuccess
 	var errs []RestartError
 
-	var timer *time.Timer
+	var timer *time.Timer = time.NewTimer(120 * time.Second)
 
 Loop:
 	for {
@@ -169,31 +169,15 @@ Loop:
 			break
 		}
 
-		// Auto-close for loop if timer has fired
-		if timer != nil {
-			select {
-			case <-timer.C:
-				break Loop
-			default:
-				break
-			}
-		}
-
 		select {
 		case success := <-restartSuccess:
-			if timer == nil {
-				timer = time.NewTimer(120 * time.Second)
-			}
 			count++
 			successes = append(successes, success)
 		case err := <-restartError:
-			if timer == nil {
-				timer = time.NewTimer(120 * time.Second)
-			}
 			count++
 			errs = append(errs, err)
-		default:
-			break
+		case <-timer.C:
+			break Loop
 		}
 	}
 

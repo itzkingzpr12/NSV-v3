@@ -201,7 +201,7 @@ func (c *Commands) HandleGetBanlistResponses(ctx context.Context, s *discordgo.S
 	var successes []GetBanlistSuccess
 	var errs []GetBanlistError
 
-	var timer *time.Timer
+	var timer *time.Timer = time.NewTimer(120 * time.Second)
 
 Loop:
 	for {
@@ -209,31 +209,15 @@ Loop:
 			break
 		}
 
-		// Auto-close for loop if timer has fired
-		if timer != nil {
-			select {
-			case <-timer.C:
-				break Loop
-			default:
-				break
-			}
-		}
-
 		select {
 		case success := <-getBanlistSuccess:
-			if timer == nil {
-				timer = time.NewTimer(120 * time.Second)
-			}
 			count++
 			successes = append(successes, success)
 		case err := <-getBanlistError:
-			if timer == nil {
-				timer = time.NewTimer(120 * time.Second)
-			}
 			count++
 			errs = append(errs, err)
-		default:
-			break
+		case <-timer.C:
+			break Loop
 		}
 	}
 
