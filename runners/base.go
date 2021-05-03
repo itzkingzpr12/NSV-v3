@@ -194,6 +194,10 @@ func (r *Runners) OnlinePlayersOutput(ctx context.Context, channel gcscmodels.Se
 							logger := logging.Logger(gcCtx)
 							logger.Error("error_log")
 						}
+						return nil, &Error{
+							Message: err.Message,
+							Err:     err,
+						}
 					} else if err.Code == 10008 {
 						newmessage, nerr := discordapi.SendMessage(r.Session, channel.ChannelID, nil, &embed)
 						if nerr != nil {
@@ -273,24 +277,6 @@ func (r *Runners) OnlinePlayersOutput(ctx context.Context, channel gcscmodels.Se
 					tempCtx := logging.AddValues(ctx, zap.NamedError("error", dmErr.Err), zap.String("error_message", dmErr.Message))
 					logger := logging.Logger(tempCtx)
 					logger.Error("runner_log")
-
-					if dmErr.Code == 10003 {
-						_, dsocErr := guildconfigservice.DeleteServerOutputChannel(ctx, r.GuildConfigService, server.GuildID, int64(channel.ID))
-						if dsocErr != nil {
-							gcCtx := logging.AddValues(ctx, zap.NamedError("error", dsocErr.Err), zap.String("error_message", dsocErr.Message))
-							logger := logging.Logger(gcCtx)
-							logger.Error("error_log")
-						}
-					}
-
-					if dmErr.Code == 10008 {
-						// TODO: Handle message not found by logging
-					} else {
-						return nil, &Error{
-							Message: dmErr.Message,
-							Err:     dmErr.Err,
-						}
-					}
 				}
 			}
 		}
