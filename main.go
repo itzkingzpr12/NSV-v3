@@ -89,8 +89,10 @@ func main() {
 
 	router := routes.GetRouter(ctx)
 	controller := controllers.Controller{
-		Config: config,
-		Cache:  cache,
+		Config:             config,
+		Cache:              cache,
+		DiscordSession:     dg,
+		GuildConfigService: guildConfigService,
 	}
 
 	r := routes.Router{

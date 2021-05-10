@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/bwmarrin/discordgo"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/configs"
+	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/services/guildconfigservice"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/utils/cache"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/utils/logging"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/viewmodels"
@@ -15,8 +17,10 @@ import (
 
 // Controller struct
 type Controller struct {
-	Config *configs.Config
-	Cache  *cache.Cache
+	Config             *configs.Config
+	Cache              *cache.Cache
+	DiscordSession     *discordgo.Session
+	GuildConfigService *guildconfigservice.GuildConfigService
 }
 
 // Response sends a response to the client

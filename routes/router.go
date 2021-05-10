@@ -35,6 +35,8 @@ func AddRoutes(ctx context.Context, router *mux.Router, r Router) {
 	// STATUS
 	router.HandleFunc(r.BasePath+"/status", r.Controller.GetStatus).Methods("GET")
 	router.HandleFunc(r.BasePath+"/activation-tokens", r.Controller.CreateActivationToken).Methods("POST")
+	router.HandleFunc(r.BasePath+"/discord/all-guilds", r.Controller.GetAllGuilds).Methods("GET")
+	router.HandleFunc(r.BasePath+"/discord/verify-subscriber-guilds", r.Controller.VerifySubscriberGuilds).Methods("GET")
 
 	router.Use(auth.AuthenticationMiddleware)
 
