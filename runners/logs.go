@@ -564,13 +564,13 @@ func (bps *KillLogsSuccessOutputFull) ConvertToEmbedField() (*discordgo.MessageE
 
 	killedMessage := ""
 	if bps.Data.PvEKill {
-		killedMessage = fmt.Sprintf("%s was killed by a %s", bps.Data.KilledName, bps.Data.KillerName)
+		killedMessage = fmt.Sprintf("**%s was killed by a %s**", bps.Data.KilledName, bps.Data.KillerName)
 		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nCreature: %s\nLevel: %d\n\n", "Wild Dino Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerLevel)
 	} else if bps.Data.KillerDinoType != "" {
-		killedMessage = fmt.Sprintf("%s was killed by %s", bps.Data.KilledName, bps.Data.KillerName)
+		killedMessage = fmt.Sprintf("**%s was killed by %s**", bps.Data.KilledName, bps.Data.KillerName)
 		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nName: %s\nCreature: %s\nTribe: %s\nLevel: %d\n\n", "Tamed Dino Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerDinoType, bps.Data.KillerTribe, bps.Data.KillerLevel)
 	} else {
-		killedMessage = fmt.Sprintf("%s was killed by %s", bps.Data.KilledName, bps.Data.KillerName)
+		killedMessage = fmt.Sprintf("**%s was killed by %s**", bps.Data.KilledName, bps.Data.KillerName)
 		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nName: %s\nTribe: %s\nLevel: %d\n\n", "Player Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerTribe, bps.Data.KillerLevel)
 	}
 
