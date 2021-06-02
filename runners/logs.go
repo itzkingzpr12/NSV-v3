@@ -43,6 +43,31 @@ type ChatLogData struct {
 	Message  string
 }
 
+// KillLogsSuccessOutputMini struct
+type KillLogsSuccessOutputMini struct {
+	Data      []KillLogData
+	Timestamp int64
+}
+
+// KillLogsSuccessOutputFull struct
+type KillLogsSuccessOutputFull struct {
+	Data KillLogData
+}
+
+// KillLogData struct
+type KillLogData struct {
+	PvEKill        bool
+	KilledName     string
+	KilledLevel    int
+	KilledDinoType string
+	KilledTribe    string
+	KillerName     string
+	KillerLevel    int
+	KillerDinoType string
+	KillerTribe    string
+	Timestamp      int64
+}
+
 // ChatLogsErrorOutput
 type ChatLogsErrorOutput struct{}
 
@@ -154,6 +179,7 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 
 				var adminLogOutputChannel *gcscmodels.ServerOutputChannel
 				var chatLogOutputChannel *gcscmodels.ServerOutputChannel
+				var killLogOutputChannel *gcscmodels.ServerOutputChannel
 				for _, oc := range server.ServerOutputChannels {
 					if !oc.Enabled {
 						continue
@@ -169,15 +195,36 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 						chatLogOutputChannel = &tempChatLogOutputChannel
 					}
 
-					if adminLogOutputChannel != nil && chatLogOutputChannel != nil {
+					if oc.OutputChannelTypeID == "kills" {
+						var tempKillLogOutputChannel gcscmodels.ServerOutputChannel = *oc
+						killLogOutputChannel = &tempKillLogOutputChannel
+					}
+
+					if adminLogOutputChannel != nil && chatLogOutputChannel != nil && killLogOutputChannel != nil {
 						break
 					}
+				}
+
+				getChat := false
+				getAdmin := false
+				getKills := false
+
+				if chatLogOutputChannel != nil {
+					getChat = true
+				}
+
+				if adminLogOutputChannel != nil {
+					getAdmin = true
+				}
+
+				if killLogOutputChannel != nil {
+					getKills = true
 				}
 
 				var aServer gcscmodels.Server = *server
 
 				wp.Submit(func() {
-					r.GetLogsRequest(serverCtx, aServer, adminLogOutputChannel, chatLogOutputChannel)
+					r.GetLogsRequest(serverCtx, aServer, adminLogOutputChannel, chatLogOutputChannel, killLogOutputChannel, getChat, getAdmin, getKills)
 				})
 			}
 		}
@@ -185,10 +232,10 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 }
 
 // GetLogsRequest func
-func (r *Runners) GetLogsRequest(ctx context.Context, server gcscmodels.Server, adminLogOutput *gcscmodels.ServerOutputChannel, chatLogOutput *gcscmodels.ServerOutputChannel) {
+func (r *Runners) GetLogsRequest(ctx context.Context, server gcscmodels.Server, adminLogOutput *gcscmodels.ServerOutputChannel, chatLogOutput *gcscmodels.ServerOutputChannel, killLogOutput *gcscmodels.ServerOutputChannel, getChat bool, getAdmin bool, getKills bool) {
 	ctx = logging.AddValues(ctx, zap.String("scope", logging.GetFuncName()))
 
-	logs, err := r.NitradoService.Client.GetLogs(server.NitradoToken.Token, fmt.Sprint(server.NitradoID), true)
+	logs, err := r.NitradoService.Client.GetLogs(server.NitradoToken.Token, fmt.Sprint(server.NitradoID), getChat, getAdmin, getKills, true)
 	if err != nil {
 		ctx = logging.AddValues(ctx,
 			zap.NamedError("error", err),
@@ -219,6 +266,10 @@ func (r *Runners) GetLogsRequest(ctx context.Context, server gcscmodels.Server, 
 
 	if chatLogOutput != nil && len(logs.PlayerLogs) > 0 {
 		go r.WriteChatLogs(ctx, server, chatLogOutput, logs.PlayerLogs)
+	}
+
+	if killLogOutput != nil && len(logs.KillLogs) > 0 {
+		go r.WriteKillLogs(ctx, server, killLogOutput, logs.KillLogs)
 	}
 }
 
@@ -361,6 +412,90 @@ func (r *Runners) WriteChatLogs(ctx context.Context, server gcscmodels.Server, c
 	}, *chatLogOutput, server, embeddableFields, embeddableErrors)
 }
 
+// WriteChatLogs func
+func (r *Runners) WriteKillLogs(ctx context.Context, server gcscmodels.Server, killLogOutput *gcscmodels.ServerOutputChannel, killLogs []nsv2.KillLog) {
+	var miniOutputs []KillLogsSuccessOutputMini
+	var miniOutput KillLogsSuccessOutputMini
+
+	var embeddableFields []discordapi.EmbeddableField
+	var embeddableErrors []discordapi.EmbeddableField
+
+	minified := len(killLogs) > 320
+
+	var embedFieldCharacterCount int = 20 // Set to 20 to account for descriptive text
+	for _, entry := range killLogs {
+		killedName := strings.Replace(entry.KilledName, "_", "\\_", -1)
+		killedName = strings.Replace(killedName, "*", "\\*", -1)
+		killerName := strings.Replace(entry.KillerName, "_", "\\_", -1)
+		killerName = strings.Replace(killerName, "*", "\\*", -1)
+
+		data := KillLogData{
+			PvEKill:        entry.PvEKill,
+			KilledName:     killedName,
+			KilledLevel:    entry.KilledLevel,
+			KilledDinoType: entry.KilledDinoType,
+			KilledTribe:    entry.KilledTribe,
+			KillerName:     killerName,
+			KillerLevel:    entry.KillerLevel,
+			KillerDinoType: entry.KillerDinoType,
+			KillerTribe:    entry.KillerTribe,
+			Timestamp:      entry.Timestamp,
+		}
+
+		if !minified {
+			embeddableFields = append(embeddableFields, &KillLogsSuccessOutputFull{
+				Data: data,
+			})
+			continue
+		}
+
+		if miniOutput.Timestamp == 0 {
+			miniOutput.Timestamp = entry.Timestamp
+		}
+
+		outputLength := len(killedName) + len(entry.KilledDinoType) + len(entry.KilledTribe) + len(killerName) + len(entry.KillerDinoType) + len(entry.KillerTribe)
+
+		if embedFieldCharacterCount+outputLength+40 < MaxEmbedFieldSize {
+			miniOutput.Data = append(miniOutput.Data, data)
+			embedFieldCharacterCount += outputLength + 40
+		} else {
+			miniOutputs = append(miniOutputs, miniOutput)
+			miniOutput = KillLogsSuccessOutputMini{
+				Data: []KillLogData{
+					data,
+				},
+				Timestamp: entry.Timestamp,
+			}
+			embedFieldCharacterCount = 20
+		}
+	}
+
+	if len(miniOutput.Data) > 0 {
+		miniOutputs = append(miniOutputs, miniOutput)
+	}
+
+	if !minified {
+		r.LogsOutput(ctx, RunnerOutputParams{
+			Title:       server.Name,
+			Description: fmt.Sprintf("PvP kill feed for %s. All time is in UTC.", time.Now().UTC().Format("January 2, 2006")),
+		}, *killLogOutput, server, embeddableFields, embeddableErrors)
+		return
+	}
+
+	if len(miniOutputs) == 0 {
+		return
+	}
+
+	for i := 0; i < len(miniOutputs); i++ {
+		embeddableFields = append(embeddableFields, &miniOutputs[i])
+	}
+
+	r.LogsOutput(ctx, RunnerOutputParams{
+		Title:       server.Name,
+		Description: fmt.Sprintf("PvP kill feed for %s. All time is in UTC.", time.Now().UTC().Format("January 2, 2006")),
+	}, *killLogOutput, server, embeddableFields, embeddableErrors)
+}
+
 // ConvertToEmbedField for NameServerOutput struct
 func (bps *AdminLogsSuccessOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
 	fieldVal := ""
@@ -414,6 +549,85 @@ func (bps *ChatLogsSuccessOutput) ConvertToEmbedField() (*discordgo.MessageEmbed
 
 	return &discordgo.MessageEmbedField{
 		Name:   utcTime,
+		Value:  fieldVal,
+		Inline: false,
+	}, nil
+}
+
+// ConvertToEmbedField for KillLogsSuccessOutputFull struct
+func (bps *KillLogsSuccessOutputFull) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
+	fieldVal := ""
+	name := ""
+
+	dateTime := time.Unix(bps.Data.Timestamp, 0)
+	utcHHMM := dateTime.UTC().Format(time.Kitchen)
+
+	killedMessage := ""
+	if bps.Data.PvEKill {
+		killedMessage = fmt.Sprintf("%s was killed by a %s", bps.Data.KilledName, bps.Data.KillerName)
+		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nCreature: %s\nLevel: %d\n\n", "Wild Dino Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerLevel)
+	} else if bps.Data.KillerDinoType != "" {
+		killedMessage = fmt.Sprintf("%s was killed by %s", bps.Data.KilledName, bps.Data.KillerName)
+		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nName: %s\nCreature: %s\nTribe: %s\nLevel: %d\n\n", "Tamed Dino Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerDinoType, bps.Data.KillerTribe, bps.Data.KillerLevel)
+	} else {
+		killedMessage = fmt.Sprintf("%s was killed by %s", bps.Data.KilledName, bps.Data.KillerName)
+		fieldVal += fmt.Sprintf("*%s - %s*\n__Killer Info__:\nName: %s\nTribe: %s\nLevel: %d\n\n", "Player Kill", utcHHMM, bps.Data.KillerName, bps.Data.KillerTribe, bps.Data.KillerLevel)
+	}
+
+	name = killedMessage
+
+	if bps.Data.KilledDinoType != "" {
+		if bps.Data.KilledTribe != "" {
+			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nTribe: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledTribe, bps.Data.KilledLevel)
+		} else {
+			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledLevel)
+		}
+	} else {
+		fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nTribe: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledTribe, bps.Data.KilledLevel)
+	}
+
+	return &discordgo.MessageEmbedField{
+		Name:   name,
+		Value:  fieldVal,
+		Inline: false,
+	}, nil
+}
+
+// ConvertToEmbedField for KillLogsSuccessOutputMini struct
+func (bps *KillLogsSuccessOutputMini) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
+	fieldVal := ""
+
+	dateTime := time.Unix(bps.Timestamp, 0)
+	utcHHMM := dateTime.UTC().Format(time.Kitchen)
+
+	if utcHHMM == "" {
+		utcHHMM = "00:00"
+	}
+
+	if len(bps.Data) == 0 {
+		fieldVal = "No PvP data..."
+	} else {
+		for _, killLog := range bps.Data {
+			if killLog.PvEKill {
+				fieldVal += fmt.Sprintf("**%s** (%s) was killed by a **%s**\n", killLog.KilledName, killLog.KilledTribe, killLog.KillerName)
+			} else if killLog.KillerDinoType != "" {
+				if killLog.KilledDinoType != "" {
+					fieldVal += fmt.Sprintf("**%s** [%s] (%s) was killed by **%s** [%s] (%s)\n", killLog.KilledName, killLog.KilledDinoType, killLog.KilledTribe, killLog.KillerName, killLog.KillerDinoType, killLog.KillerTribe)
+				} else {
+					fieldVal += fmt.Sprintf("**%s** (%s) was killed by **%s** [%s] (%s)\n", killLog.KilledName, killLog.KilledTribe, killLog.KillerName, killLog.KillerDinoType, killLog.KillerTribe)
+				}
+			} else {
+				if killLog.KilledDinoType != "" {
+					fieldVal += fmt.Sprintf("**%s** [%s] (%s) was killed by **%s** (%s)\n", killLog.KilledName, killLog.KilledDinoType, killLog.KilledTribe, killLog.KillerName, killLog.KillerTribe)
+				} else {
+					fieldVal += fmt.Sprintf("**%s** (%s) was killed by **%s** (%s)\n", killLog.KilledName, killLog.KilledTribe, killLog.KillerName, killLog.KillerTribe)
+				}
+			}
+		}
+	}
+
+	return &discordgo.MessageEmbedField{
+		Name:   fmt.Sprintf("__**%s**__", utcHHMM),
 		Value:  fieldVal,
 		Inline: false,
 	}, nil

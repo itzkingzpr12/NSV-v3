@@ -35,6 +35,7 @@ type SetOutputCommandConfirmationOutput struct {
 	CurrentAdminChannelID   string
 	CurrentChatChannelID    string
 	CurrentPlayersChannelID string
+	CurrentKillsChannelID   string
 	NewChannelID            string
 }
 
@@ -135,6 +136,14 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 		return
 	}
 
+	if _, ok := c.Config.Reactions["set_output_kill"]; !ok {
+		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
+			Message: "Unable to find reactions for command",
+			Err:     errors.New("missing set_output_kill reaction"),
+		})
+		return
+	}
+
 	if _, ok := c.Config.Reactions["set_output_players"]; !ok {
 		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
 			Message: "Unable to find reactions for command",
@@ -146,6 +155,7 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 	adminReaction := c.Config.Reactions["set_output_admin"]
 	chatReaction := c.Config.Reactions["set_output_chat"]
 	playersReaction := c.Config.Reactions["set_output_players"]
+	killReaction := c.Config.Reactions["set_output_kill"]
 
 	reactionModel := models.SetOutputReaction{
 		Reactions: []models.Reaction{
@@ -156,6 +166,10 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 			{
 				Name: chatReaction.Name,
 				ID:   chatReaction.ID,
+			},
+			{
+				Name: killReaction.Name,
+				ID:   killReaction.ID,
 			},
 			{
 				Name: playersReaction.Name,
@@ -221,6 +235,17 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 
 			setOutputOutput.CurrentPlayersChannelID = channel.ChannelID
 			reactionModel.ServerOutputChannelIDPlayers = channel.ID
+		case "kills":
+			_, dcErr := discordapi.GetChannel(s, channel.ChannelID)
+			if dcErr != nil {
+				if dcErr.Code == 10003 {
+					guildconfigservice.DeleteServerOutputChannel(ctx, c.GuildConfigService, mc.GuildID, int64(channel.ID))
+				}
+				break
+			}
+
+			setOutputOutput.CurrentKillsChannelID = channel.ChannelID
+			reactionModel.ServerOutputChannelIDKills = channel.ID
 		}
 	}
 
@@ -228,7 +253,7 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 
 	embedParams := discordapi.EmbeddableParams{
 		Title:       fmt.Sprintf("Setting Output for %s", server.Name),
-		Description: fmt.Sprintf("Please press the relevant reaction to set the output channel type.\n\n<%s> **Admin Log**\n<%s> **Chat Log**\n<%s> **Online Players**", adminReaction.FullEmoji, chatReaction.FullEmoji, playersReaction.FullEmoji),
+		Description: fmt.Sprintf("Please press the relevant reaction to set the output channel type.\n\n<%s> **Admin Log**\n<%s> **Chat Log**\n<%s> **Kill Log**\n<%s> **Online Players**", adminReaction.FullEmoji, chatReaction.FullEmoji, killReaction.FullEmoji, playersReaction.FullEmoji),
 		TitleURL:    c.Config.Bot.DocumentationURL,
 		Footer:      fmt.Sprintf("Executed by %s", mc.Author.Username),
 	}
@@ -273,6 +298,15 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 		return
 	}
 
+	arErr = discordapi.AddReaction(s, mc.ChannelID, successMessages[0].ID, killReaction.FullEmoji)
+	if arErr != nil {
+		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
+			Message: arErr.Message,
+			Err:     arErr.Err,
+		})
+		return
+	}
+
 	arErr = discordapi.AddReaction(s, mc.ChannelID, successMessages[0].ID, playersReaction.FullEmoji)
 	if arErr != nil {
 		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
@@ -306,6 +340,7 @@ func (c *Commands) SetOutput(ctx context.Context, s *discordgo.Session, mc *disc
 		Reactions: []string{
 			adminReaction.ID,
 			chatReaction.ID,
+			killReaction.ID,
 			playersReaction.ID,
 		},
 		CommandName: command.Name,
@@ -375,6 +410,12 @@ func (so *SetOutputCommandConfirmationOutput) ConvertToEmbedField() (*discordgo.
 		fieldVal += fmt.Sprintf("**Current Chat Channel:** <#%s>\n", so.CurrentChatChannelID)
 	} else {
 		fieldVal += "**Current Chat Channel:** None\n"
+	}
+
+	if so.CurrentKillsChannelID != "" {
+		fieldVal += fmt.Sprintf("**Current Kills Channel:** <#%s>\n", so.CurrentKillsChannelID)
+	} else {
+		fieldVal += "**Current Kills Channel:** None\n"
 	}
 
 	if so.CurrentPlayersChannelID != "" {

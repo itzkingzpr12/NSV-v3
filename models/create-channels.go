@@ -12,6 +12,7 @@ type CreateChannelsReaction struct {
 	AdminChannelName   string     `json:"admin_channel_name"`
 	ChatChannelName    string     `json:"chat_channel_name"`
 	PlayersChannelName string     `json:"players_channel_name"`
+	KillsChannelName   string     `json:"kills_channel_name"`
 }
 
 // CacheKey func

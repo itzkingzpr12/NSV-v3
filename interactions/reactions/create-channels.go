@@ -54,7 +54,7 @@ func (r *Reactions) CreateChannels(ctx context.Context, s *discordgo.Session, mr
 		return
 	}
 
-	if ccr.AdminChannelName == "" && ccr.ChatChannelName == "" && ccr.PlayersChannelName == "" {
+	if ccr.AdminChannelName == "" && ccr.ChatChannelName == "" && ccr.PlayersChannelName == "" && ccr.KillsChannelName == "" {
 		r.ErrorOutput(ctx, "No channels to create", mra.ChannelID, Error{
 			Message: "All channels already created",
 			Err:     errors.New("please check your server listing to see channels"),
@@ -151,7 +151,7 @@ func (r *Reactions) CreateChannels(ctx context.Context, s *discordgo.Session, mr
 			logger := logging.Logger(newCTX)
 			logger.Error("error_log")
 
-			errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.AdminChannelName)
+			errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.ChatChannelName)
 		} else {
 			_, csocErr := guildconfigservice.CreateServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, newChannel.ID, ccr.Server.ID, "chat")
 			if csocErr != nil {
@@ -159,7 +159,39 @@ func (r *Reactions) CreateChannels(ctx context.Context, s *discordgo.Session, mr
 				logger := logging.Logger(newCTX)
 				logger.Error("error_log")
 
-				errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.AdminChannelName)
+				errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.ChatChannelName)
+			} else {
+				successOutput.Channels = append(successOutput.Channels, newChannel)
+			}
+		}
+	}
+
+	if ccr.KillsChannelName != "" {
+		channelData := discordgo.GuildChannelCreateData{
+			Name:     ccr.KillsChannelName,
+			Type:     discordgo.ChannelTypeGuildText,
+			ParentID: parentCategory.ID,
+		}
+
+		if parentCategory != nil {
+			channelData.PermissionOverwrites = parentCategory.PermissionOverwrites
+		}
+
+		newChannel, ncErr := discordapi.CreateChannel(s, mra.GuildID, channelData)
+		if ncErr != nil {
+			newCTX := logging.AddValues(ctx, zap.NamedError("error", ncErr), zap.String("error_message", ncErr.Message))
+			logger := logging.Logger(newCTX)
+			logger.Error("error_log")
+
+			errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.KillsChannelName)
+		} else {
+			_, csocErr := guildconfigservice.CreateServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, newChannel.ID, ccr.Server.ID, "kills")
+			if csocErr != nil {
+				newCTX := logging.AddValues(ctx, zap.NamedError("error", csocErr), zap.String("error_message", csocErr.Message))
+				logger := logging.Logger(newCTX)
+				logger.Error("error_log")
+
+				errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.KillsChannelName)
 			} else {
 				successOutput.Channels = append(successOutput.Channels, newChannel)
 			}
@@ -183,7 +215,7 @@ func (r *Reactions) CreateChannels(ctx context.Context, s *discordgo.Session, mr
 			logger := logging.Logger(newCTX)
 			logger.Error("error_log")
 
-			errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.AdminChannelName)
+			errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.PlayersChannelName)
 		} else {
 			_, csocErr := guildconfigservice.CreateServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, newChannel.ID, ccr.Server.ID, "players")
 			if csocErr != nil {
@@ -191,7 +223,7 @@ func (r *Reactions) CreateChannels(ctx context.Context, s *discordgo.Session, mr
 				logger := logging.Logger(newCTX)
 				logger.Error("error_log")
 
-				errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.AdminChannelName)
+				errorOutput.ChannelNames = append(errorOutput.ChannelNames, ccr.PlayersChannelName)
 			} else {
 				successOutput.Channels = append(successOutput.Channels, newChannel)
 			}

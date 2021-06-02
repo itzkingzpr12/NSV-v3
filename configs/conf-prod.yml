@@ -376,7 +376,7 @@ COMMANDS:
     name: "Create Channels"
     long: "createchannels"
     short: "cc"
-    description: "Create a server's channels for Admin Logs, Chat Logs, and Online Players. This will only create channels that are not already set for the server. To move a servers output to a new channel, please use the Set Channel command instead."
+    description: "Create a server's channels for Admin Logs, Chat Logs, Kill Logs, and Online Players. This will only create channels that are not already set for the server. To move a servers output to a new channel, please use the Set Channel command instead."
     min_args: 1
     max_args: 5
     usage:
@@ -385,7 +385,7 @@ COMMANDS:
       - "cc {server_id}"
     examples: 
       - "createchannels 1234567"
-      - "createchannels 1234567 rag-1"
+      - "createchannels 1234567 ragnarok"
     enabled: true
     category: "Bot Setup"
     category_short: "setup"
@@ -393,7 +393,7 @@ COMMANDS:
     name: "Set Output"
     long: "setoutput"
     short: "so"
-    description: "Changes where a server outputs its logs information to. This can be used to change the output channel for Admin Logs, Chat Logs, and Online Players."
+    description: "Changes where a server outputs its logs information to. This can be used to change the output channel for Admin Logs, Chat Logs, Kill Logs, and Online Players."
     min_args: 2
     max_args: 2
     usage:
@@ -515,6 +515,12 @@ REACTIONS:
     id: "835691086054686720"
     animated: false
     full_emoji: ":chat:835691086054686720"
+  "set_output_kill":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"
   "set_output_players":
     icon: ""
     name: "player"

@@ -137,6 +137,7 @@ func (c *Commands) CreateChannels(ctx context.Context, s *discordgo.Session, mc 
 	foundAdmin := false
 	foundChat := false
 	foundPlayers := false
+	foundKills := false
 
 	var parentID string = ""
 
@@ -193,6 +194,21 @@ func (c *Commands) CreateChannels(ctx context.Context, s *discordgo.Session, mc 
 
 			createChannelOutput.ExistingChannels = append(createChannelOutput.ExistingChannels, aChannel)
 			foundPlayers = true
+		case "kills":
+			dcChan, dcErr := discordapi.GetChannel(s, aChannel.ChannelID)
+			if dcErr != nil {
+				if dcErr.Code == 10003 {
+					guildconfigservice.DeleteServerOutputChannel(ctx, c.GuildConfigService, mc.GuildID, int64(channel.ID))
+				}
+				break
+			}
+
+			if dcChan.ParentID != "" {
+				parentID = dcChan.ParentID
+			}
+
+			createChannelOutput.ExistingChannels = append(createChannelOutput.ExistingChannels, aChannel)
+			foundKills = true
 		}
 	}
 
@@ -213,6 +229,11 @@ func (c *Commands) CreateChannels(ctx context.Context, s *discordgo.Session, mc 
 	if !foundPlayers {
 		createChannelOutput.NewChannels = append(createChannelOutput.NewChannels, fmt.Sprintf("online-players-%s", parsedCommand.Params.Name))
 		reactionModel.PlayersChannelName = fmt.Sprintf("online-players-%s", parsedCommand.Params.Name)
+	}
+
+	if !foundKills {
+		createChannelOutput.NewChannels = append(createChannelOutput.NewChannels, fmt.Sprintf("kill-log-%s", parsedCommand.Params.Name))
+		reactionModel.KillsChannelName = fmt.Sprintf("kill-log-%s", parsedCommand.Params.Name)
 	}
 
 	if len(createChannelOutput.ExistingChannels) == 0 && len(createChannelOutput.NewChannels) == 0 {
@@ -349,6 +370,8 @@ func (so *CreateChannelsCommandConfirmationOutput) ConvertToEmbedField() (*disco
 			fieldVal += fmt.Sprintf("Admin Logs: <#%s>\n", channel.ChannelID)
 		case "chat":
 			fieldVal += fmt.Sprintf("Chat Logs: <#%s>\n", channel.ChannelID)
+		case "kills":
+			fieldVal += fmt.Sprintf("Kill Logs: <#%s>\n", channel.ChannelID)
 		case "players":
 			fieldVal += fmt.Sprintf("Online Players: <#%s>\n", channel.ChannelID)
 		}

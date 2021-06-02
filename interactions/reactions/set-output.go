@@ -146,6 +146,39 @@ func (r *Reactions) SetOutput(ctx context.Context, s *discordgo.Session, mra *di
 			}
 			newOutputChannel = soc.ServerOutputChannel
 		}
+	case r.Config.Reactions["set_output_kill"].ID:
+		channelType = "Kill Log"
+		if reactionModel.ServerOutputChannelIDKills != 0 {
+			soc, socErr := guildconfigservice.GetServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, reactionModel.ServerOutputChannelIDKills)
+			if socErr != nil {
+				r.ErrorOutput(ctx, "Failed to set get existing output channel", mra.ChannelID, Error{
+					Message: socErr.Message,
+					Err:     socErr.Err,
+				})
+				return
+			}
+			oldOutputChannel = soc.ServerOutputChannel
+
+			socUpdate, socUpdateErr := guildconfigservice.UpdateServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, reactionModel.ServerOutputChannelIDKills, reactionModel.NewChannel.ID, reactionModel.Server.ID, "kills")
+			if socUpdateErr != nil {
+				r.ErrorOutput(ctx, "Failed to update output channel", mra.ChannelID, Error{
+					Message: socUpdateErr.Message,
+					Err:     socUpdateErr.Err,
+				})
+				return
+			}
+			newOutputChannel = socUpdate.ServerOutputChannel
+		} else {
+			soc, socErr := guildconfigservice.CreateServerOutputChannel(ctx, r.GuildConfigService, mra.GuildID, reactionModel.NewChannel.ID, reactionModel.Server.ID, "kills")
+			if socErr != nil {
+				r.ErrorOutput(ctx, "Failed to add new output channel", mra.ChannelID, Error{
+					Message: socErr.Message,
+					Err:     socErr.Err,
+				})
+				return
+			}
+			newOutputChannel = soc.ServerOutputChannel
+		}
 	default:
 		r.ErrorOutput(ctx, "Invalid reaction", mra.ChannelID, Error{
 			Message: "unknown reaction used",

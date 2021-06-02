@@ -113,6 +113,7 @@ func (lso *ListServersOutput) ConvertToEmbedField() (*discordgo.MessageEmbedFiel
 	var adminOutputChannel *gcscmodels.ServerOutputChannel
 	var chatOutputChannel *gcscmodels.ServerOutputChannel
 	var playersOutputChannel *gcscmodels.ServerOutputChannel
+	var killsOutputChannel *gcscmodels.ServerOutputChannel
 	if lso.Server.ServerOutputChannels != nil {
 		for _, outputChannel := range lso.Server.ServerOutputChannels {
 			if outputChannel.OutputChannelType == nil {
@@ -129,6 +130,9 @@ func (lso *ListServersOutput) ConvertToEmbedField() (*discordgo.MessageEmbedFiel
 			case "players":
 				temp := *outputChannel
 				playersOutputChannel = &temp
+			case "kills":
+				temp := *outputChannel
+				killsOutputChannel = &temp
 			}
 		}
 	}
@@ -143,6 +147,12 @@ func (lso *ListServersOutput) ConvertToEmbedField() (*discordgo.MessageEmbedFiel
 		fieldVal += fmt.Sprintf("\n**Chat Logs:** <#%s>", chatOutputChannel.ChannelID)
 	} else {
 		fieldVal += "\n**Chat Logs:** Not Set"
+	}
+
+	if killsOutputChannel != nil {
+		fieldVal += fmt.Sprintf("\n**Kill Logs:** <#%s>", killsOutputChannel.ChannelID)
+	} else {
+		fieldVal += "\n**Kill Logs:** Not Set"
 	}
 
 	if playersOutputChannel != nil {

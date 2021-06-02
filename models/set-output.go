@@ -10,6 +10,7 @@ type SetOutputReaction struct {
 	NewChannel                   Channel    `json:"new_channel"`
 	ServerOutputChannelIDAdmin   uint64     `json:"server_output_channel_id_admin"`
 	ServerOutputChannelIDChat    uint64     `json:"server_output_channel_id_chat"`
+	ServerOutputChannelIDKills   uint64     `json:"server_output_channel_id_kills"`
 	ServerOutputChannelIDPlayers uint64     `json:"server_output_channel_id_players"`
 }
 
