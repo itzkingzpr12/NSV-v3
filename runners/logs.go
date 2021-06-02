@@ -578,12 +578,12 @@ func (bps *KillLogsSuccessOutputFull) ConvertToEmbedField() (*discordgo.MessageE
 
 	if bps.Data.KilledDinoType != "" {
 		if bps.Data.KilledTribe != "" {
-			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nTribe: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledTribe, bps.Data.KilledLevel)
+			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nTribe: %s\nLevel: %d\n\u200b", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledTribe, bps.Data.KilledLevel)
 		} else {
-			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledLevel)
+			fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nCreature: %s\nLevel: %d\n\u200b", bps.Data.KilledName, bps.Data.KilledDinoType, bps.Data.KilledLevel)
 		}
 	} else {
-		fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nTribe: %s\nLevel: %d", bps.Data.KilledName, bps.Data.KilledTribe, bps.Data.KilledLevel)
+		fieldVal += fmt.Sprintf("__Killed Info__:\nName: %s\nTribe: %s\nLevel: %d\n\u200b", bps.Data.KilledName, bps.Data.KilledTribe, bps.Data.KilledLevel)
 	}
 
 	return &discordgo.MessageEmbedField{
