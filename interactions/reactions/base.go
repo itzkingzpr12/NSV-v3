@@ -229,6 +229,46 @@ func (r *Reactions) Output(ctx context.Context, channelID string, command config
 	return messages, nil
 }
 
+// Output func
+func (r *Reactions) EditOutput(ctx context.Context, channelID string, messageID string, command configs.Command, embeddableFields []discordapi.EmbeddableField, embeddableErrors []discordapi.EmbeddableField) ([]*discordgo.Message, *Error) {
+	ctx = logging.AddValues(ctx, zap.String("scope", logging.GetFuncName()))
+
+	params := discordapi.EmbeddableParams{
+		Title:        command.Name,
+		Description:  command.Description,
+		Color:        r.Config.Bot.OkColor,
+		TitleURL:     r.Config.Bot.DocumentationURL,
+		Footer:       "Updated",
+		ThumbnailURL: r.Config.Bot.OkThumbnail,
+	}
+
+	if len(embeddableErrors) > 0 {
+		params.Color = r.Config.Bot.WarnColor
+		params.ThumbnailURL = r.Config.Bot.WarnThumbnail
+	}
+
+	combinedFields := append(embeddableFields, embeddableErrors...)
+	embeds := discordapi.CreateEmbeds(params, combinedFields)
+
+	var messages []*discordgo.Message
+	for _, embed := range embeds {
+		message, err := discordapi.EditMessage(r.Session, channelID, messageID, nil, &embed)
+		if err != nil {
+			ctx = logging.AddValues(ctx, zap.NamedError("error", err.Err), zap.String("error_message", err.Message), zap.Int("status_code", err.Code))
+			logger := logging.Logger(ctx)
+			logger.Error("error_log")
+
+			return nil, &Error{
+				Message: err.Message,
+				Err:     err.Err,
+			}
+		}
+		messages = append(messages, message)
+	}
+
+	return messages, nil
+}
+
 // ConvertToEmbedField for Error struct
 func (e *Error) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
 	return &discordgo.MessageEmbedField{
