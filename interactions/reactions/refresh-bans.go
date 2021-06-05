@@ -250,6 +250,8 @@ Loop:
 		}
 	}
 
+	progressTicker.Stop()
+
 	var pef []discordapi.EmbeddableField
 	var pee []discordapi.EmbeddableField
 
