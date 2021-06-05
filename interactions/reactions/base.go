@@ -140,6 +140,8 @@ func (r *Reactions) Factory(ctx context.Context, s *discordgo.Session, mra *disc
 		r.AddRole(ctx, s, mra, command)
 	case "Remove Role":
 		r.RemoveRole(ctx, s, mra, command)
+	case "Refresh Bans":
+		r.RefreshBans(ctx, s, mra, command)
 	default:
 		// TODO: Output error
 	}

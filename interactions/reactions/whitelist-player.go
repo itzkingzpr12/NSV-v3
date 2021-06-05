@@ -139,8 +139,6 @@ func (r *Reactions) WhitelistPlayer(ctx context.Context, s *discordgo.Session, m
 
 // WhitelistPlayerRequest func
 func (r *Reactions) WhitelistPlayerRequest(ctx context.Context, server gcscmodels.Server, playerName string, whitelistSuccess chan WhitelistSuccess, whitelistError chan WhitelistError) {
-	// FOR TESTING
-	fmt.Printf("Server ID: %d\n", server.NitradoID)
 	ctx = logging.AddValues(ctx, zap.String("scope", logging.GetFuncName()))
 
 	_, err := r.NitradoService.Client.WhitelistPlayer(server.NitradoToken.Token, fmt.Sprint(server.NitradoID), playerName)

@@ -159,6 +159,8 @@ func (c *Commands) Factory(ctx context.Context, s *discordgo.Session, mc *discor
 		c.RemoveRole(ctx, s, mc, command)
 	case "Search Players":
 		c.SearchPlayers(ctx, s, mc, command)
+	case "Refresh Bans":
+		c.RefreshBans(ctx, s, mc, command)
 	default:
 		// TODO: Output error
 	}

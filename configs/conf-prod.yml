@@ -67,6 +67,10 @@ CACHE_SETTINGS:
   online_players_output_channel_messages:
     base: "ONLINE_PLAYERS_OUTPUT_CHANNEL_MESSAGES"
     ttl: "86400" # 24 hours
+  refresh_bans_reaction:
+    base: "REFRESH_BANS_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
 BOT:
   prefix: "n!"
   ok_color: 0x3AB795
@@ -454,6 +458,24 @@ COMMANDS:
     workers: 10
     category: "Player Management"
     category_short: "players"
+  -
+    name: "Refresh Bans"
+    long: "refreshbans"
+    short: "rb"
+    description: "Copy bans from your servers over to one, multiple, or all servers. This will sync the servers up so they all have the same banlist. The process may take a while, so please be patient and wait for the success response."
+    min_args: 0
+    max_args: 20
+    usage:
+      - "refreshbans"
+      - "refreshbans {server_id} {server_id} ..."
+      - "rb"
+    examples: 
+      - "refreshbans"
+      - "refreshbans 1234567 7654321"
+    enabled: true
+    workers: 5
+    category: "Player Management"
+    category_short: "players"
 REACTIONS:
   "ban":
     icon: ""
@@ -539,3 +561,9 @@ REACTIONS:
     id: "835688347530821634"
     animated: false
     full_emoji: ":removerole:835688347530821634"
+  "refreshbans":
+    icon: ""
+    name: "refreshbans"
+    id: "850476833223868456"
+    animated: false
+    full_emoji: ":refreshbans:850476833223868456"

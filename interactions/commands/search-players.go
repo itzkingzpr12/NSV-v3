@@ -182,8 +182,6 @@ Loop:
 	var successOutputMap map[string]SearchPlayersSuccessOutput = make(map[string]SearchPlayersSuccessOutput, 0)
 
 	for _, success := range successes {
-		// FOR TESTING
-		fmt.Println(success.Server.Name)
 		for _, player := range success.Players {
 			fmt.Println(player.Name)
 		}
