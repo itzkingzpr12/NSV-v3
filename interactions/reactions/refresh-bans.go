@@ -174,7 +174,7 @@ func (r *Reactions) HandleRefreshBansResponses(ctx context.Context, s *discordgo
 	var successes []RefreshBansSuccess
 	var errs []RefreshBanError
 
-	var timer *time.Timer = time.NewTimer(600 * time.Second)
+	var timer *time.Timer = time.NewTimer(3600 * time.Second)
 
 Loop:
 	for {

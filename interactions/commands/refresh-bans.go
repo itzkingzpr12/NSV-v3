@@ -207,7 +207,7 @@ func (c *Commands) HandleRefreshBansResponses(ctx context.Context, s *discordgo.
 	var successes []GetBanlistSuccess
 	var errs []GetBanlistError
 
-	var timer *time.Timer = time.NewTimer(120 * time.Second)
+	var timer *time.Timer = time.NewTimer(240 * time.Second)
 
 Loop:
 	for {
