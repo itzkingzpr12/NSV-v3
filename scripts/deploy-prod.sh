@@ -39,4 +39,4 @@ docker push $AWS_REGISTRY_IMAGE:$CI_ENVIRONMENT_SLUG
 
 # Tell our service to use the latest version of task definition.
 
-aws ecs update-service --cluster disc-$CI_ENVIRONMENT_NAME-bots --service bot-$CI_ENVIRONMENT_NAME-nsm3 --task-definition bot-$CI_ENVIRONMENT_NAME-nsm3 --region $AWS_REGION --force-new-deployment
+aws ecs update-service --cluster disc-prod-bots --service bot-$CI_ENVIRONMENT_NAME-nsm3 --task-definition bot-$CI_ENVIRONMENT_NAME-nsm3 --region $AWS_REGION --force-new-deployment
