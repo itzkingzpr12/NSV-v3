@@ -154,12 +154,12 @@ func (r *Runners) Logs(ctx context.Context, delay time.Duration) {
 			}
 
 			if vErr := guildconfigservice.ValidateGuildFeed(guildFeed, r.Config.Bot.GuildService, "Servers"); vErr != nil {
-				newCtx := logging.AddValues(agCtx,
-					zap.NamedError("error", vErr),
-					zap.String("error_message", vErr.Message),
-				)
-				logger := logging.Logger(newCtx)
-				logger.Info("runner_log")
+				// newCtx := logging.AddValues(agCtx,
+				// 	zap.NamedError("error", vErr),
+				// 	zap.String("error_message", vErr.Message),
+				// )
+				// logger := logging.Logger(newCtx)
+				// logger.Info("runner_log")
 				continue
 			}
 
