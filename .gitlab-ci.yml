@@ -21,7 +21,7 @@ Build:
         - docker build -t $IMAGE_TAG . 
         - docker push $IMAGE_TAG
 
-Prod:
+Woodlands:
     stage: deploy
     services: 
         - docker:dind
