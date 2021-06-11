@@ -2,7 +2,7 @@ region = "us-west-2"
 
 namespace = "bot"
 
-stage = "prod"
+stage = "woodlands"
 
 name = "nsm3"
 
@@ -25,7 +25,7 @@ private_subnet_ids = [
 
 load_balancer_listener_arn = "arn:aws:elasticloadbalancing:us-west-2:358393647923:listener/app/disc-prod-bots/0e5e0f8ad52a8964/67888df0e57a342c"
 
-load_balancer_listener_paths = ["/nitrado-server-manager-v3/*"]
+load_balancer_listener_paths = ["/woodlands-nitrado-server-manager-v3/*"]
 
 target_group_port = 80
 
@@ -33,7 +33,7 @@ target_group_protocol = "HTTP"
 
 target_group_target_type = "ip"
 
-health_check_path = "/nitrado-server-manager-v3/status"
+health_check_path = "/woodlands-nitrado-server-manager-v3/status"
 
 health_check_timeout = 10
 
@@ -45,7 +45,7 @@ health_check_interval = 15
 
 health_check_matcher = "200"
 
-container_image = "358393647923.dkr.ecr.us-west-2.amazonaws.com/nitrado-server-manager-v3:prod"
+container_image = "358393647923.dkr.ecr.us-west-2.amazonaws.com/nitrado-server-manager-v3:woodlands"
 
 container_memory = 512
 
@@ -75,7 +75,7 @@ container_environment = [
 container_secrets = [
   {
     name      = "ENV_VARS"
-    valueFrom = "arn:aws:secretsmanager:us-west-2:358393647923:secret:prod/nitrado-server-manager-v3-8buz6Q"
+    valueFrom = "arn:aws:secretsmanager:us-west-2:358393647923:secret:woodlands/nitrado-server-manager-v3-mBWHjw"
   }
 ]
 
