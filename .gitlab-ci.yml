@@ -30,3 +30,13 @@ Prod:
     script: 
         - source scripts/deploy-prod.sh
     when: manual
+
+Woodlands:
+    stage: deploy
+    services: 
+        - docker:dind
+    environment:
+        name: woodlands
+    script: 
+        - source scripts/deploy-woodlands.sh
+    when: manual

@@ -83,7 +83,7 @@ func (c *Controller) VerifySubscriberGuilds(w http.ResponseWriter, r *http.Reque
 								continue
 							}
 
-							if gs.Name == "nitrado-server-manager-v3" {
+							if gs.Name == c.Config.Bot.GuildService {
 								guild.NSMSubscriber = true
 								countVerified++
 							}
