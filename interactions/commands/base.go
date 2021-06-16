@@ -161,6 +161,8 @@ func (c *Commands) Factory(ctx context.Context, s *discordgo.Session, mc *discor
 		c.SearchPlayers(ctx, s, mc, command)
 	case "Refresh Bans":
 		c.RefreshBans(ctx, s, mc, command)
+	case "Kill Feed Settings":
+		c.KillFeedSettings(ctx, s, mc, command)
 	default:
 		// TODO: Output error
 	}

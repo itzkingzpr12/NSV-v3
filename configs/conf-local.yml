@@ -71,6 +71,10 @@ CACHE_SETTINGS:
     base: "REFRESH_BANS_REACTION"
     ttl: "300" # 5 minutes
     enabled: true
+  kill_feed_reaction:
+    base: "KILL_FEED_REACTION"
+    ttl: "300" # 5 minutes
+    enabled: true
 BOT:
   prefix: "n!"
   ok_color: 0x3AB795
@@ -476,6 +480,24 @@ COMMANDS:
     workers: 5
     category: "Player Management"
     category_short: "players"
+  -
+    name: "Kill Feed Settings"
+    long: "killfeed"
+    short: "kf"
+    description: "Toggle a kill feed setting for one or all servers. You can toggle:\n- Player vs. Player kills\n- Player vs. Tame kills\n- Tame vs. Player kills\n- Wild Dino vs. Player kills"
+    min_args: 0
+    max_args: 1
+    usage:
+      - "killfeed"
+      - "killfeed {server_id}"
+      - "kf"
+    examples: 
+      - "killfeed"
+      - "killfeed 1234567"
+    enabled: true
+    workers: 5
+    category: "Bot Setup"
+    category_short: "setup"
 REACTIONS:
   "ban":
     icon: ""
@@ -567,3 +589,27 @@ REACTIONS:
     id: "850476833223868456"
     animated: false
     full_emoji: ":refreshbans:850476833223868456"
+  "kill_feed_pvp":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"
+  "kill_feed_pvd":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"
+  "kill_feed_wvp":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"
+  "kill_feed_dvd":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"

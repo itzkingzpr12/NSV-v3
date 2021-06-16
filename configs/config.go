@@ -42,6 +42,7 @@ type Config struct {
 		RemoveRoleReaction                 CacheSetting `yaml:"remove_role_reaction"`
 		OnlinePlayersOutputChannelMessages CacheSetting `yaml:"online_players_output_channel_messages"`
 		RefreshBansReaction                CacheSetting `yaml:"refresh_bans_reaction"`
+		KillFeedSettingsReaction           CacheSetting `yaml:"kill_feed_reaction"`
 	} `yaml:"CACHE_SETTINGS"`
 	Bot struct {
 		Prefix           string `yaml:"prefix"`

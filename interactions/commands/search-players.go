@@ -19,6 +19,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const MaxSearchEmbedFieldValueLimit int = 800
+
 // SearchPlayersCommand struct
 type SearchPlayersCommand struct {
 	Params SearchPlayersCommandParams
@@ -182,11 +184,6 @@ Loop:
 	var successOutputMap map[string]SearchPlayersSuccessOutput = make(map[string]SearchPlayersSuccessOutput, 0)
 
 	for _, success := range successes {
-		for _, player := range success.Players {
-			fmt.Println(player.Name)
-		}
-		fmt.Println("")
-
 		aServer := success.Server
 		for _, player := range success.Players {
 			if player.Name == "" {
@@ -280,6 +277,10 @@ func (out *SearchPlayersSuccessOutput) ConvertToEmbedField() (*discordgo.Message
 	}
 
 	for _, server := range out.Servers {
+		if len(fieldVal)+len(server.Name) >= MaxSearchEmbedFieldValueLimit {
+			break
+		}
+
 		fieldVal += fmt.Sprintf("\n\t%s", server.Name)
 	}
 

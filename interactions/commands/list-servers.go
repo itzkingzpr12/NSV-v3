@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -72,6 +73,12 @@ func (c *Commands) ListServers(ctx context.Context, s *discordgo.Session, mc *di
 
 	var embeddableFields []discordapi.EmbeddableField
 	var embeddableErrors []discordapi.EmbeddableField
+
+	if len(guildFeed.Payload.Guild.Servers) > 1 {
+		sort.SliceStable(guildFeed.Payload.Guild.Servers, func(i, j int) bool {
+			return guildFeed.Payload.Guild.Servers[i].Name < guildFeed.Payload.Guild.Servers[j].Name
+		})
+	}
 
 	for _, server := range guildFeed.Payload.Guild.Servers {
 		var aServer = *server

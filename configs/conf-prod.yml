@@ -372,7 +372,7 @@ COMMANDS:
     examples: 
       - "whitelist"
       - "whitelist 1234567"
-    enabled: true
+    enabled: false
     workers: 10
     category: "Player Management"
     category_short: "players"
