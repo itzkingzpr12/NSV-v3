@@ -245,7 +245,7 @@ func (h *HelpOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *disco
 // ConvertToEmbedField for Help struct
 func (h *HelpCategoryOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
 	return &discordgo.MessageEmbedField{
-		Name:   h.CategoryName,
+		Name:   fmt.Sprintf("**%s**", h.CategoryName),
 		Value:  fmt.Sprintf("To see related commands, please run this command:\n```\n%s%s %s\n```", h.Prefix, h.HelpCommand.Long, h.CategoryShortName),
 		Inline: false,
 	}, nil
