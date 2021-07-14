@@ -236,7 +236,7 @@ func (h *HelpOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *disco
 	}
 
 	return &discordgo.MessageEmbedField{
-		Name:   fmt.Sprintf("__%s__", h.Command.Name),
+		Name:   fmt.Sprintf("**__%s__**", h.Command.Name),
 		Value:  value,
 		Inline: false,
 	}, nil
@@ -246,7 +246,7 @@ func (h *HelpOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *disco
 func (h *HelpCategoryOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
 	return &discordgo.MessageEmbedField{
 		Name:   fmt.Sprintf("**%s**", h.CategoryName),
-		Value:  fmt.Sprintf("To see related commands, please run this command:\n```\n%s%s %s\n```", h.Prefix, h.HelpCommand.Long, h.CategoryShortName),
+		Value:  fmt.Sprintf("To see related commands, please run this command:\n```\n%s%s %s\n```\n\u200b", h.Prefix, h.HelpCommand.Long, h.CategoryShortName),
 		Inline: false,
 	}, nil
 }
