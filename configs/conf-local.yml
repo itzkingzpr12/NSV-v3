@@ -613,3 +613,9 @@ REACTIONS:
     id: "849492990460428340"
     animated: false
     full_emoji: ":kill:849492990460428340"
+  "kill_feed_dvw":
+    icon: ""
+    name: "kill"
+    id: "849492990460428340"
+    animated: false
+    full_emoji: ":kill:849492990460428340"

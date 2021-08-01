@@ -142,6 +142,8 @@ func (r *Reactions) Factory(ctx context.Context, s *discordgo.Session, mra *disc
 		r.RemoveRole(ctx, s, mra, command)
 	case "Refresh Bans":
 		r.RefreshBans(ctx, s, mra, command)
+	case "Kill Feed Settings":
+		r.KillFeedSettings(ctx, s, mra, command)
 	default:
 		// TODO: Output error
 	}

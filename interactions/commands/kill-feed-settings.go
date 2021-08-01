@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"gitlab.com/BIC_Dev/guild-config-service-client/gcscmodels"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/configs"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/interactions/reactions"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/models"
@@ -31,9 +30,8 @@ type KillFeedSettingsCommandParams struct {
 
 // KillFeedSettingsCommandConfirmationOutput struct
 type KillFeedSettingsCommandConfirmationOutput struct {
-	ServerCount         int
-	Server              models.KillFeedServer
-	ServerOutputChannel gcscmodels.ServerOutputChannel
+	ServerCount int
+	Servers     []models.KillFeedServer
 }
 
 // KillFeedSettings func
@@ -94,10 +92,10 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 		return
 	}
 
-	if _, ok := c.Config.Reactions["kill_feed_dvp"]; !ok {
+	if _, ok := c.Config.Reactions["kill_feed_pvd"]; !ok {
 		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
 			Message: "Unable to find reactions for command",
-			Err:     errors.New("missing kill_feed_dvp reaction"),
+			Err:     errors.New("missing kill_feed_pvd reaction"),
 		})
 		return
 	}
@@ -118,10 +116,19 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 		return
 	}
 
+	if _, ok := c.Config.Reactions["kill_feed_dvw"]; !ok {
+		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
+			Message: "Unable to find reactions for command",
+			Err:     errors.New("missing kill_feed_dvw reaction"),
+		})
+		return
+	}
+
 	killFeedPvP := c.Config.Reactions["kill_feed_pvp"]
 	killFeedPvD := c.Config.Reactions["kill_feed_pvd"]
 	killFeedWvP := c.Config.Reactions["kill_feed_wvp"]
 	killFeedDvD := c.Config.Reactions["kill_feed_dvd"]
+	killFeedDvW := c.Config.Reactions["kill_feed_dvw"]
 
 	reactionModel := models.KillFeedSettingsReaction{
 		Reactions: []models.Reaction{
@@ -141,6 +148,10 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 				Name: killFeedDvD.Name,
 				ID:   killFeedDvD.ID,
 			},
+			{
+				Name: killFeedDvW.Name,
+				ID:   killFeedDvW.ID,
+			},
 		},
 		User: &models.User{
 			ID:   mc.Author.ID,
@@ -148,7 +159,6 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 		},
 	}
 
-	var serverOutputChannel gcscmodels.ServerOutputChannel
 	for _, aServer := range guildFeed.Payload.Guild.Servers {
 		if !aServer.Enabled {
 			continue
@@ -158,51 +168,52 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 			continue
 		}
 
-		var outputChannelSettings []models.KillFeedOutputChannelSetting
-		for _, oc := range aServer.ServerOutputChannels {
-			if oc.OutputChannelTypeID != "kills" {
+		if parsedCommand.Params.ServerID != 0 && parsedCommand.Params.ServerID != aServer.NitradoID {
+			continue
+		}
+
+		for _, outputChannel := range aServer.ServerOutputChannels {
+			if !outputChannel.Enabled {
 				continue
 			}
 
-			if oc.ServerOutputChannelSettings == nil {
-				break
+			if outputChannel.OutputChannelTypeID != "kills" {
+				continue
 			}
 
-			for _, ocs := range oc.ServerOutputChannelSettings {
-				outputChannelSettings = append(outputChannelSettings, models.KillFeedOutputChannelSetting{
-					ID:                    uint(ocs.ID),
-					ServerOutputChannelID: uint(ocs.ServerOutputChannelID),
-					SettingName:           ocs.SettingName,
-					SettingValue:          ocs.SettingValue,
-					Enabled:               ocs.Enabled,
-				})
+			killFeedServer := models.KillFeedServer{
+				Server: models.Server{
+					ID:        aServer.ID,
+					NitradoID: aServer.NitradoID,
+					Name:      aServer.Name,
+				},
+				OutputChannel: models.ServerOutputChannel{
+					ID:                  outputChannel.ID,
+					ChannelID:           outputChannel.ChannelID,
+					OutputChannelTypeID: outputChannel.OutputChannelTypeID,
+					ServerID:            outputChannel.ServerID,
+					Enabled:             outputChannel.Enabled,
+				},
 			}
-		}
 
-		if parsedCommand.Params.ServerID != 0 {
-			if parsedCommand.Params.ServerID == aServer.NitradoID {
-				reactionModel.Servers = append(reactionModel.Servers, models.KillFeedServer{
-					Server: models.Server{
-						ID:        aServer.ID,
-						NitradoID: aServer.NitradoID,
-						Name:      aServer.Name,
-					},
-					OutputChannelSettings: outputChannelSettings,
-				})
+			if outputChannel.ServerOutputChannelSettings != nil {
+				for _, setting := range outputChannel.ServerOutputChannelSettings {
+					if !setting.Enabled {
+						continue
+					}
 
-				break
+					killFeedServer.OutputChannel.ServerOutputChannelSettings = append(killFeedServer.OutputChannel.ServerOutputChannelSettings, models.ServerOutputChannelSetting{
+						ID:                    setting.ID,
+						ServerOutputChannelID: setting.ServerOutputChannelID,
+						SettingName:           setting.SettingName,
+						SettingValue:          setting.SettingValue,
+						Enabled:               setting.Enabled,
+					})
+				}
 			}
-		} else {
-			if parsedCommand.Params.ServerID == aServer.NitradoID {
-				reactionModel.Servers = append(reactionModel.Servers, models.KillFeedServer{
-					Server: models.Server{
-						ID:        aServer.ID,
-						NitradoID: aServer.NitradoID,
-						Name:      aServer.Name,
-					},
-					OutputChannelSettings: outputChannelSettings,
-				})
-			}
+
+			reactionModel.Servers = append(reactionModel.Servers, killFeedServer)
+			break
 		}
 	}
 
@@ -219,12 +230,7 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 
 	var killFeedSettingsOutput KillFeedSettingsCommandConfirmationOutput
 	killFeedSettingsOutput.ServerCount = len(reactionModel.Servers)
-
-	if parsedCommand.Params.ServerID != 0 {
-		killFeedSettingsOutput.Server = reactionModel.Servers[0]
-
-		killFeedSettingsOutput.ServerOutputChannel = serverOutputChannel
-	}
+	killFeedSettingsOutput.Servers = reactionModel.Servers
 
 	embeddableFields = append(embeddableFields, &killFeedSettingsOutput)
 
@@ -293,6 +299,15 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 		return
 	}
 
+	arErr = discordapi.AddReaction(s, mc.ChannelID, successMessages[0].ID, killFeedDvW.FullEmoji)
+	if arErr != nil {
+		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
+			Message: arErr.Message,
+			Err:     arErr.Err,
+		})
+		return
+	}
+
 	cacheKey := reactionModel.CacheKey(c.Config.CacheSettings.KillFeedSettingsReaction.Base, successMessages[0].ID)
 	setCacheErr := c.Cache.SetStruct(ctx, cacheKey, &reactionModel, c.Config.CacheSettings.KillFeedSettingsReaction.TTL)
 	if setCacheErr != nil {
@@ -319,6 +334,7 @@ func (c *Commands) KillFeedSettings(ctx context.Context, s *discordgo.Session, m
 			killFeedPvD.ID,
 			killFeedWvP.ID,
 			killFeedDvD.ID,
+			killFeedDvW.ID,
 		},
 		CommandName: command.Name,
 		User:        mc.Author.ID,
@@ -367,11 +383,11 @@ func (so *KillFeedSettingsCommandConfirmationOutput) ConvertToEmbedField() (*dis
 	if so.ServerCount > 1 {
 		fieldVal += fmt.Sprintf("Toggling the settings for %d servers.", so.ServerCount)
 		name = "Toggling Kill Feed Settings"
-	} else {
-		name = so.Server.Server.Name
+	} else if so.ServerCount == 1 {
+		name = so.Servers[0].Server.Name
 
-		if so.ServerOutputChannel.ServerOutputChannelSettings != nil {
-			for _, setting := range so.ServerOutputChannel.ServerOutputChannelSettings {
+		if len(so.Servers[0].OutputChannel.ServerOutputChannelSettings) > 0 {
+			for _, setting := range so.Servers[0].OutputChannel.ServerOutputChannelSettings {
 				switch setting.SettingName {
 				case "pvp":
 					if setting.SettingValue != "enabled" {
@@ -396,6 +412,12 @@ func (so *KillFeedSettingsCommandConfirmationOutput) ConvertToEmbedField() (*dis
 						fieldVal += "**Tame vs. Tame Log Enabled:** NO\n"
 					} else {
 						fieldVal += "**Tame vs. Tame Log Enabled:** YES\n"
+					}
+				case "dvw":
+					if setting.SettingValue != "enabled" {
+						fieldVal += "**Tame vs. Wild Dino Log Enabled:** NO\n"
+					} else {
+						fieldVal += "**Tame vs. Wild Dino Log Enabled:** YES\n"
 					}
 				}
 			}

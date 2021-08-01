@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
-	"gitlab.com/BIC_Dev/guild-config-service-client/gcscmodels"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/configs"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/models"
 	"gitlab.com/BIC_Dev/nitrado-server-manager-v3/services/discordapi"
@@ -17,12 +16,22 @@ import (
 
 // KillFeedSettingsSuccessOutput struct
 type KillFeedSettingsSuccessOutput struct {
-	Commands []string
+	SettingName    string
+	SettingChanges []SettingChange
+}
+
+// SettingChange struct
+type SettingChange struct {
+	NitradoID       int64
+	SettingName     string
+	OriginalSetting string
+	NewSetting      string
 }
 
 // KillFeedSettingsErrorOutput struct
 type KillFeedSettingsErrorOutput struct {
-	Commands []string
+	SettingName       string
+	FailedUpdateCount int
 }
 
 // KillFeedSettings func
@@ -50,54 +59,120 @@ func (r *Reactions) KillFeedSettings(ctx context.Context, s *discordgo.Session, 
 	var errorOutput KillFeedSettingsErrorOutput
 
 	for _, server := range reactionModel.Servers {
-		var outputChannel *gcscmodels.ServerOutputChannel
 
 		/*
-				killFeedPvP := c.Config.Reactions["kill_feed_pvp"]
+			killFeedPvP := c.Config.Reactions["kill_feed_pvp"]
 			killFeedPvD := c.Config.Reactions["kill_feed_pvd"]
 			killFeedWvP := c.Config.Reactions["kill_feed_wvp"]
 			killFeedDvD := c.Config.Reactions["kill_feed_dvd"]
 		*/
+
+		var settingName string
 		switch mra.MessageReaction.Emoji.ID {
-		case r.Config.Reactions["set_output_admin"].ID:
-
+		case r.Config.Reactions["kill_feed_pvp"].ID:
+			settingName = "pvp"
+			successOutput.SettingName = "PvP Logs"
+			errorOutput.SettingName = "PvP Logs"
+		case r.Config.Reactions["kill_feed_pvd"].ID:
+			settingName = "pvd"
+			successOutput.SettingName = "Player vs. Tame Logs"
+			errorOutput.SettingName = "Player vs. Tame Logs"
+		case r.Config.Reactions["kill_feed_wvp"].ID:
+			settingName = "wvp"
+			successOutput.SettingName = "Player vs. Wild Dino Logs"
+			errorOutput.SettingName = "Player vs. Wild Dino Logs"
+		case r.Config.Reactions["kill_feed_dvd"].ID:
+			settingName = "dvd"
+			successOutput.SettingName = "Tame vs. Tame Logs"
+			errorOutput.SettingName = "Tame vs. Tame Logs"
+		case r.Config.Reactions["kill_feed_dvw"].ID:
+			settingName = "dvw"
+			successOutput.SettingName = "Tame vs. Wild Dino Logs"
+			errorOutput.SettingName = "Tame vs. Wild Dino Logs"
+		default:
+			continue
 		}
 
-		_, gspErr := guildconfigservice.CreateServerOutputChannelSetting(ctx, r.GuildConfigService, mra.GuildID, reactionModel.GuildServiceID, reactionModel.RoleID, cmd.Name)
-	}
+		settingValue := "enabled"
+		var setting *models.ServerOutputChannelSetting
+		for _, aSetting := range server.OutputChannel.ServerOutputChannelSettings {
+			if aSetting.SettingName == settingName {
+				setting = &aSetting
+				settingValue = aSetting.SettingValue
+				break
+			}
+		}
 
-	for _, cmd := range reactionModel.Commands {
-		_, gspErr := guildconfigservice.CreateGuildServicePermission(ctx, r.GuildConfigService, mra.GuildID, reactionModel.GuildServiceID, reactionModel.RoleID, cmd.Name)
-		if gspErr != nil {
-			newCtx := logging.AddValues(ctx,
-				zap.NamedError("error", gspErr),
-				zap.String("error_message", gspErr.Message),
-				zap.String("role_id", reactionModel.RoleID),
-				zap.String("permission_command", cmd.Name),
-			)
-			logger := logging.Logger(newCtx)
-			logger.Error("error_log")
-
-			errorOutput.Commands = append(errorOutput.Commands, cmd.Name)
+		var newSettingValue string
+		if settingValue == "enabled" {
+			newSettingValue = "disabled"
 		} else {
-			successOutput.Commands = append(successOutput.Commands, cmd.Name)
+			newSettingValue = "enabled"
 		}
+
+		if setting == nil {
+			_, socsErr := guildconfigservice.CreateServerOutputChannelSetting(ctx, r.GuildConfigService, mra.GuildID, server.OutputChannel.ID, settingName, newSettingValue)
+			if socsErr != nil {
+				newCtx := logging.AddValues(ctx,
+					zap.NamedError("error", socsErr),
+					zap.String("error_message", socsErr.Message),
+					zap.Uint64("server_id", server.Server.ID),
+					zap.String("setting_name", settingName),
+					zap.String("setting_value", settingValue),
+				)
+				logger := logging.Logger(newCtx)
+				logger.Error("error_log")
+
+				errorOutput.FailedUpdateCount += 1
+				continue
+			}
+
+			successOutput.SettingChanges = append(successOutput.SettingChanges, SettingChange{
+				NitradoID:       server.Server.NitradoID,
+				SettingName:     settingName,
+				OriginalSetting: settingValue,
+				NewSetting:      newSettingValue,
+			})
+		} else {
+			_, socsErr := guildconfigservice.UpdateServerOutputChannelSetting(ctx, r.GuildConfigService, mra.GuildID, setting.ID, server.OutputChannel.ID, settingName, newSettingValue)
+			if socsErr != nil {
+				newCtx := logging.AddValues(ctx,
+					zap.NamedError("error", socsErr),
+					zap.String("error_message", socsErr.Message),
+					zap.Uint64("server_id", server.Server.ID),
+					zap.String("setting_name", settingName),
+					zap.String("setting_value", settingValue),
+				)
+				logger := logging.Logger(newCtx)
+				logger.Error("error_log")
+
+				errorOutput.FailedUpdateCount += 1
+				continue
+			}
+		}
+
+		successOutput.SettingChanges = append(successOutput.SettingChanges, SettingChange{
+			NitradoID:       server.Server.NitradoID,
+			SettingName:     settingName,
+			OriginalSetting: settingValue,
+			NewSetting:      newSettingValue,
+		})
 	}
 
 	var embeddableFields []discordapi.EmbeddableField
 	var embeddableErrors []discordapi.EmbeddableField
 
-	if len(successOutput.Commands) > 0 {
+	if len(successOutput.SettingChanges) > 0 {
 		embeddableFields = append(embeddableFields, &successOutput)
 	}
 
-	if len(errorOutput.Commands) > 0 {
+	if errorOutput.FailedUpdateCount > 0 {
 		embeddableErrors = append(embeddableErrors, &errorOutput)
 	}
 
 	editedCommand := command
-	editedCommand.Name = "Added Role Access"
-	editedCommand.Description = fmt.Sprintf("<@&%s> has been provided access to run commands for this bot.", reactionModel.RoleID)
+	editedCommand.Name = "Updated Kill Feed Settings"
+	editedCommand.Description = "Settings updated for the kill feed logging."
 
 	r.Output(ctx, mra.ChannelID, editedCommand, embeddableFields, embeddableErrors)
 	return
@@ -105,20 +180,30 @@ func (r *Reactions) KillFeedSettings(ctx context.Context, s *discordgo.Session, 
 
 // ConvertToEmbedField for KillFeedSettingsSuccessOutput struct
 func (out *KillFeedSettingsSuccessOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
-	fieldVal := "```"
+	fieldVal := ""
+	name := fmt.Sprintf("Updated %s setting for %d server(s)", out.SettingName, len(out.SettingChanges))
 
-	for _, cmd := range out.Commands {
-		fieldVal += "\n" + cmd
+	totalEnabled := 0
+	totalDisabled := 0
+
+	for _, change := range out.SettingChanges {
+		if change.NewSetting == "enabled" {
+			totalEnabled += 1
+		} else if change.NewSetting == "disabled" {
+			totalDisabled += 1
+		}
 	}
 
-	if fieldVal == "```" {
-		fieldVal += "\nNo Commands"
+	if len(out.SettingChanges) > 1 {
+		fieldVal = fmt.Sprintf("Servers Enabled: %d\nServers Disabled: %d", totalEnabled, totalDisabled)
+	} else if len(out.SettingChanges) == 1 {
+		fieldVal = fmt.Sprintf("Original Setting: %s\nNew Setting: %s", out.SettingChanges[0].OriginalSetting, out.SettingChanges[0].NewSetting)
+	} else {
+		fieldVal = "Something went wrong"
 	}
-
-	fieldVal += "\n```"
 
 	return &discordgo.MessageEmbedField{
-		Name:   "Command(s) Now Accessible",
+		Name:   name,
 		Value:  fieldVal,
 		Inline: false,
 	}, nil
@@ -126,21 +211,9 @@ func (out *KillFeedSettingsSuccessOutput) ConvertToEmbedField() (*discordgo.Mess
 
 // ConvertToEmbedField for KillFeedSettingsErrorOutput struct
 func (out *KillFeedSettingsErrorOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
-	fieldVal := "```"
-
-	for _, cmd := range out.Commands {
-		fieldVal += "\n" + cmd
-	}
-
-	if fieldVal == "```" {
-		fieldVal += "\nNo Commands"
-	}
-
-	fieldVal += "\n```"
-
 	return &discordgo.MessageEmbedField{
-		Name:   "Failed To Give Access To Command(s)",
-		Value:  fieldVal,
+		Name:   fmt.Sprintf("Failed to update %s setting", out.SettingName),
+		Value:  fmt.Sprintf("Servers: %d", out.FailedUpdateCount),
 		Inline: false,
 	}, nil
 }
