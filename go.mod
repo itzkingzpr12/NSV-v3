@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/mediocregopher/radix/v3 v3.7.0
 	gitlab.com/BIC_Dev/guild-config-service-client v0.7.1
-	gitlab.com/BIC_Dev/nitrado-service-v2-client v1.0.0
+	gitlab.com/BIC_Dev/nitrado-service-v2-client v1.1.0
 	go.uber.org/zap v1.16.0
 	gopkg.in/yaml.v2 v2.4.0
 )

@@ -89,7 +89,7 @@ RUNNERS:
     delay: 0
     enabled: true
   logs:
-    frequency: 120
+    frequency: 1200
     workers: 5
     delay: 15
     enabled: true

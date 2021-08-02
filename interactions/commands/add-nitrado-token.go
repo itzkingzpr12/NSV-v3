@@ -32,6 +32,7 @@ type AddNitradoTokenCommandParams struct {
 type AddNitradoTokenOutput struct {
 	Guild           models.Guild `json:"guild"`
 	NitradoTokenKey string       `json:"nitrado_token_key"`
+	IsNew           bool         `json:"is_new"`
 }
 
 // AddNitradoToken func
@@ -91,16 +92,30 @@ func (c *Commands) AddNitradoToken(ctx context.Context, s *discordgo.Session, mc
 		return
 	}
 
-	var accountNames []string
+	var accounts map[string][]int64 = make(map[string][]int64)
 	if guildFeed.Payload.Guild.NitradoTokens != nil {
 		for _, nitradoToken := range guildFeed.Payload.Guild.NitradoTokens {
-			accountNames = append(accountNames, nitradoToken.Token)
+			accounts[nitradoToken.Token] = []int64{}
 		}
 	}
 
-	createResponse, createErr := c.NitradoService.Client.CreateNitradoToken(nsv2.CreateNitradoTokenRequest{
+	if guildFeed.Payload.Guild.Servers != nil {
+		for _, server := range guildFeed.Payload.Guild.Servers {
+			if server.NitradoToken == nil {
+				continue
+			}
+
+			if _, ok := accounts[server.NitradoToken.Token]; !ok {
+				continue
+			}
+
+			accounts[server.NitradoToken.Token] = append(accounts[server.NitradoToken.Token], server.NitradoID)
+		}
+	}
+
+	createResponse, createErr := c.NitradoService.Client.UpdateNitradoToken(nsv2.UpdateNitradoTokenRequest{
 		NitradoToken: addNitradoTokenCommand.Params.Token,
-		AccountNames: accountNames,
+		Accounts:     accounts,
 	})
 	if createErr != nil {
 		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
@@ -118,29 +133,34 @@ func (c *Commands) AddNitradoToken(ctx context.Context, s *discordgo.Session, mc
 		return
 	}
 
-	body := gcscmodels.NitradoToken{
-		GuildID: nitradoTokenGuild.Guild.ID,
-		Token:   createResponse.NitradoTokenKey,
-		Enabled: true,
-	}
+	isNewToken := false
+	if createResponse.Message == "Successfully added Nitrado Token" {
+		isNewToken = true
+		body := gcscmodels.NitradoToken{
+			GuildID: nitradoTokenGuild.Guild.ID,
+			Token:   createResponse.NitradoTokenKey,
+			Enabled: true,
+		}
 
-	createNitradoTokenParams := nitrado_tokens.NewCreateNitradoTokenParamsWithTimeout(10)
-	createNitradoTokenParams.SetGuild(nitradoTokenGuild.Guild.ID)
-	createNitradoTokenParams.SetContext(context.Background())
-	createNitradoTokenParams.SetBody(&body)
+		createNitradoTokenParams := nitrado_tokens.NewCreateNitradoTokenParamsWithTimeout(10)
+		createNitradoTokenParams.SetGuild(nitradoTokenGuild.Guild.ID)
+		createNitradoTokenParams.SetContext(context.Background())
+		createNitradoTokenParams.SetBody(&body)
 
-	_, cntErr := c.GuildConfigService.Client.NitradoTokens.CreateNitradoToken(createNitradoTokenParams, c.GuildConfigService.Auth)
-	if cntErr != nil {
-		c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
-			Message: "Failed to add Nitrado Token to Guild Config",
-			Err:     cntErr,
-		})
-		return
+		_, cntErr := c.GuildConfigService.Client.NitradoTokens.CreateNitradoToken(createNitradoTokenParams, c.GuildConfigService.Auth)
+		if cntErr != nil {
+			c.ErrorOutput(ctx, command, mc.Content, mc.ChannelID, Error{
+				Message: "Failed to add Nitrado Token to Guild Config",
+				Err:     cntErr,
+			})
+			return
+		}
 	}
 
 	anto := AddNitradoTokenOutput{
 		Guild:           nitradoTokenGuild.Guild,
 		NitradoTokenKey: createResponse.NitradoTokenKey,
+		IsNew:           isNewToken,
 	}
 
 	var embeddableFields []discordapi.EmbeddableField
@@ -185,10 +205,15 @@ func parseAddNitradoTokenCommand(command configs.Command, mc *discordgo.MessageC
 
 // ConvertToEmbedField for NitradoTokenOutput struct
 func (nto *AddNitradoTokenOutput) ConvertToEmbedField() (*discordgo.MessageEmbedField, *discordapi.Error) {
+	name := "Added New Nitrado Token"
+	if !nto.IsNew {
+		name = "Updated Nitrado Token"
+	}
+
 	fieldVal := fmt.Sprintf("Discord Server ID: %s\nNitrado Token Key: %s", nto.Guild.ID, nto.NitradoTokenKey)
 
 	return &discordgo.MessageEmbedField{
-		Name:   "Added New Nitrado Token",
+		Name:   name,
 		Value:  fieldVal,
 		Inline: false,
 	}, nil
