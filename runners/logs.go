@@ -294,7 +294,7 @@ func (r *Runners) WriteAdminLogs(ctx context.Context, server gcscmodels.Server, 
 			output.Timestamp = entry.Timestamp
 		}
 
-		if prevPlayerName == name && embedFieldCharacterCount+len(command)+2 < MaxEmbedFieldSize {
+		if prevPlayerName == name && embedFieldCharacterCount+len(command)+2 < MaxEmbedFieldSize && len(output.Data) > 0 {
 			prevData := output.Data[len(output.Data)-1]
 			prevData.Command += "\n" + command
 			output.Data[len(output.Data)-1] = prevData
@@ -365,7 +365,7 @@ func (r *Runners) WriteChatLogs(ctx context.Context, server gcscmodels.Server, c
 			output.Timestamp = entry.Timestamp
 		}
 
-		if prevPlayerGT == gt && embedFieldCharacterCount+len(message)+2 < MaxEmbedFieldSize {
+		if prevPlayerGT == gt && embedFieldCharacterCount+len(message)+2 < MaxEmbedFieldSize && len(output.Data) > 0 {
 			prevData := output.Data[len(output.Data)-1]
 			prevData.Message += "\n" + message
 			output.Data[len(output.Data)-1] = prevData
