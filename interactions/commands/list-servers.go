@@ -161,6 +161,8 @@ func (lso *ListServersOutput) ConvertToEmbedField() (*discordgo.MessageEmbedFiel
 		fieldVal += "\n**Online Players:** Not Set"
 	}
 
+	fieldVal += "\n\u200b"
+
 	return &discordgo.MessageEmbedField{
 		Name:   lso.Server.Name,
 		Value:  fieldVal,
