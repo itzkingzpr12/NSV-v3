@@ -90,7 +90,7 @@ RUNNERS:
     enabled: true
   logs:
     frequency: 3600
-    workers: 2
+    workers: 1
     delay: 60
     enabled: true
 COMMANDS:
