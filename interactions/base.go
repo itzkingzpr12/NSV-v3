@@ -72,9 +72,9 @@ func (i *Interactions) MessageCreate(s *discordgo.Session, mc *discordgo.Message
 	}
 
 	// Ignore message if user is a bot
-	/*if mc.Author.Bot {
+	if mc.Author.Bot {
 		return
-	}*/
+	}
 
 	// Check if the message is a command
 	if strings.HasPrefix(strings.ToLower(mc.Content), i.Config.Bot.Prefix) {
