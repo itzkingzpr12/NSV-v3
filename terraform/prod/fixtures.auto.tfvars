@@ -47,9 +47,9 @@ health_check_matcher = "200"
 
 container_image = "358393647923.dkr.ecr.us-west-2.amazonaws.com/nitrado-server-manager-v3:prod"
 
-container_memory = 512
+container_memory = 1024
 
-container_memory_reservation = 450
+container_memory_reservation = 900
 
 container_port_mappings = [
   {
@@ -61,7 +61,7 @@ container_port_mappings = [
 
 container_port = 8080
 
-container_cpu = 256
+container_cpu = 512
 
 container_essential = true
 
@@ -99,9 +99,9 @@ deployment_controller_type = "ECS"
 
 desired_count = 1
 
-task_memory = 512
+task_memory = 1024
 
-task_cpu = 256
+task_cpu = 512
 
 task_role_policy = <<EOF
 {
